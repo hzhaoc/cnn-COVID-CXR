@@ -1,0 +1,6 @@
+- tresnet
+- augmentation visual
+- dvc
+- feature visualm
+- new test sample
+- image preprocess: histogram equilization, data segmentation

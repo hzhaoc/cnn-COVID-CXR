@@ -1,0 +1,17 @@
+*.pyc
+.DS_Store
+*.log
+/.img
+/.ipynb_checkpoints
+/.ref
+/__pycache__
+/data
+*.cls
+*.aux
+*.out
+*.gz
+*.tex
+*.docx
+/model
+/src/.ipynb_checkpoints
+/src/__pycache__
