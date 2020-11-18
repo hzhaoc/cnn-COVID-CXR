@@ -147,7 +147,7 @@ def tf_plot_confusion_matrix(matrix, class_names, epoch):
     return
 
 
-def torch_plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies):
+def torch_plot_learning_curves(train_losses, valid_losses):
     if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
     
@@ -161,17 +161,6 @@ def torch_plot_learning_curves(train_losses, valid_losses, train_accuracies, val
     ax.set_ylabel('loss')
     ax.grid()
     fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'losses.png'))
-
-    fig = plt.figure(figsize=(15, 5))
-    ax = plt.subplot(1, 1, 1)
-    ax.plot(train_accuracies, label='train_accuracies')
-    ax.plot(valid_accuracies, label='valid_accuracies')
-    ax.legend(loc='upper left')
-    ax.set_title('accuracy curve')
-    ax.set_xlabel('epoch')
-    ax.set_ylabel('accuracy')
-    ax.grid()
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'accuracies.png'))
 
     pass
 

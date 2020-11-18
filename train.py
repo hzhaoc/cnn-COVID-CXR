@@ -171,8 +171,8 @@ def torch_train():
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
                                                sampler = train_sampler, num_workers=1, pin_memory=True)
     # test data
-    test = datasets.ImageFolder(root='./data/test', transform=_pytorch_transform)
-    test_loader = torch.utils.data.DataLoader(test, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
+    test_ds = datasets.ImageFolder(root='./data/test', transform=_pytorch_transform)
+    test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model
     model = torchvision.models.resnet50(pretrained=True)  # ResNet-50
@@ -206,9 +206,9 @@ def torch_train():
         if is_best:
             # best_val_acc = valid_accuracy
             best_val_los = valid_loss
-            torch.save(os.path.join('./model/', params['model']['name']+'.pth'))
+            torch.save(model, os.path.join('./model/', params['model']['name']+'.pth'))
             
-    torch_plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies)
+    torch_plot_learning_curves(train_losses, valid_losses)
 
     best_model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
     test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
