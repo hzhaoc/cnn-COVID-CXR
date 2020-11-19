@@ -1,7 +1,9 @@
+- pyspark meta etl
 - feature visual
+- augmentation visual
 - iteration on resnet, covidnet
 - image preprocess: histogram equilization, data segmentation
-- augmentation visual
+- preprocess visual
 - tresnet
 - new test sample
 - dvc
