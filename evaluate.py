@@ -19,6 +19,7 @@ from src.etl import *  # to load params, global 'variables'
 import matplotlib.pyplot as plt
 import matplotlib
 from src.utils import *
+from collections import Counter
 
 
 @timmer(1, 0, 0)

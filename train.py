@@ -188,7 +188,8 @@ def torch_train():
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=params['train']['lr_decay']['step_size'], 
                                            gamma=params['train']['lr_decay']['gamma'])
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     model.to(device)
     criterion.to(device)
     
@@ -215,6 +216,10 @@ def torch_train():
 
     torch_plot_confusion_matrix(test_results, test_ds.classes)
 
+    with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'wb') as pickle_file:
+        pickle.dump(train.losses, pickle_file, pickle.HIGHEST_PROTOCOL)
+    with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'wb') as pickle_file:
+        pickle.dump(valid.losses, pickle_file, pickle.HIGHEST_PROTOCOL)
 
 def _torch_train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10):
     batch_time = AverageMeter()
