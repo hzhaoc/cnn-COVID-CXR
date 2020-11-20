@@ -166,7 +166,7 @@ def torch_plot_learning_curves(train_losses, valid_losses):
     pass
 
 
-def torch_plot_confusion_matrix(results, class_names):
+def torch_plot_confusion_matrix(results, class_names, epoch):
     if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
         
@@ -188,7 +188,7 @@ def torch_plot_confusion_matrix(results, class_names):
     ax.set_title('Normalized Confusion Matrix')
     ax.set_xlabel('Pred')
     ax.set_ylabel('True')
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'confusion_matrix.png'))
+    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'confusion_matrix_epoch{epoch}.png'))
     pass
 
 

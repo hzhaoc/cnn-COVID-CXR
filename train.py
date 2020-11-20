@@ -194,6 +194,7 @@ def torch_train():
     criterion.to(device)
     
     train_losses, valid_losses = [], []
+    best_epoch = -1
     best_val_los = 100
     for epoch in range(params['train']['epochs']):
         train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
@@ -206,20 +207,21 @@ def torch_train():
         is_best = valid_loss < best_val_los
         if is_best:
             # best_val_acc = valid_accuracy
-            best_val_los = valid_loss
-            torch.save(model, os.path.join('./model/', params['model']['name']+'.pth'))
+            best_val_los, best_epoch = valid_loss, epoch
+            torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
             
     torch_plot_learning_curves(train_losses, valid_losses)
 
     best_model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
     test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
 
-    torch_plot_confusion_matrix(test_results, test_ds.classes)
-
+    torch_plot_confusion_matrix(test_results, test_ds.classes, best_epoch)
+    with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'last.epoch'), 'wb') as pickle_file:
+        pickle.dump(epoch, pickle_file, pickle.HIGHEST_PROTOCOL)
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'wb') as pickle_file:
-        pickle.dump(train.losses, pickle_file, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(train_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'wb') as pickle_file:
-        pickle.dump(valid.losses, pickle_file, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(valid_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
 
 def _torch_train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10):
     batch_time = AverageMeter()
