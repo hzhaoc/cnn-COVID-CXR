@@ -1,6 +1,9 @@
 model:
   tool: 'torch'
   name: 'ResNet-50-test'
+  torch:
+    transfer_learning: True
+    coninue_learning: True
   tensorflow:
     weightspath: './model/COVIDNet-CXR-Small'
     metaname: 'model.meta'
@@ -17,7 +20,7 @@ data:
   image_size: 224
 train:
   display_step: 1
-  epochs: 3
+  epochs: 1
   learning_rate: 0.0006
   lr_decay:
     step_size: 7

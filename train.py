@@ -176,14 +176,14 @@ def torch_train():
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model
-    if os.path.isfile(os.path.join('./model/', params['model']['name']+'.pth')):
-        model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))  # continut learning from self-trained model at last point
+    if params['model']['torch']['continue_learning']:  # continut learning from self-trained model at last point, load saved model first
+        model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
         train_losses = pickle.load(open(os.path.join(SAVE_PATH,  'train.losses'), 'rb'))
         valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
         best_val_loss = min(valid_losses)
         last_epoch = len(valid_losses)
-    else:
-        model = torchvision.models.resnet50(pretrained=True)  # transfer learning from a pretrained model
+    else:  # start from a new model, wheter it's transfer learnign or not
+        model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
         last_epoch, train_losses, valid_losses, best_val_loss = -1, [], [], np.inf
 
     num_ftrs = model.fc.in_features
