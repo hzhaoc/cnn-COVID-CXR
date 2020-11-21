@@ -165,7 +165,7 @@ def torch_train():
     # train data
     train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
     # train data -> balance sample classes
-    torch_balanced_covid_samples(images, nclasses, class_map, covid_weight=0.3)
+
     _, _, sample_weights = torch_balanced_covid_samples(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])
     sample_weights = torch.DoubleTensor(sample_weights)
     train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
@@ -178,9 +178,9 @@ def torch_train():
     # model
     if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
         try:
-            model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
-            train_losses = pickle.load(open(os.path.join(SAVE_PATH,  'train.losses'), 'rb'))
-            valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
+            model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
+            train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
+            valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
         except ValueError:
             print('are the torch model, train.losses, valid_losses all saved?')
         best_val_loss = min(valid_losses)

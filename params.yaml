@@ -3,7 +3,7 @@ model:
   name: 'ResNet-50-test'
   torch:
     transfer_learning: True
-    coninue_learning: True
+    continue_learning: True
   tensorflow:
     weightspath: './model/COVIDNet-CXR-Small'
     metaname: 'model.meta'
