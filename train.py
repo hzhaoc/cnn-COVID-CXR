@@ -184,7 +184,7 @@ def torch_train():
         last_epoch = len(valid_losses)
     else:  # start from a new model, wheter it's transfer learnign or not
         model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
-        last_epoch, train_losses, valid_losses, best_val_loss = -1, [], [], np.inf
+        last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
