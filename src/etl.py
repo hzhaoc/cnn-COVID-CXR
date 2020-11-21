@@ -30,7 +30,8 @@ discard = [f'COVID-19({x})' for x in ['100', '101', '102', '103', '104', '105',
                                       '124', '125', '126', '217']]
 # input parameters
 params = yaml.safe_load(open("params.yaml", 'r'))
-labelmap_inv = {v: k for k, v in params['train']['labelmap'].items()}
+labelmap = class2index(['covid', 'normal', 'pneumonia'])
+labelmap_inv = {v: k for k, v in labelmap.items()}
 # to save data
 SAVE_PATH = params['data']['data_path']
 TRAIN_PATH = os.path.join(SAVE_PATH, 'train')
@@ -70,14 +71,14 @@ def datafromfile(META):
             continue
         imgdata = process_image_file(sample.img, params['data']['crop_top'], params['data']['image_size'])
         if sample.train:
-            if sample.label == params['train']['labelmap']['covid']:
+            if sample.label == labelmap['covid']:
                 TRAIN_DATA['covid']['data'].append(imgdata)
                 TRAIN_DATA['covid']['label'].append(sample.label)
             else:
                 TRAIN_DATA['!covid']['data'].append(imgdata)
                 TRAIN_DATA['!covid']['label'].append(sample.label)
         else:
-            if sample.label == params['train']['labelmap']['covid']:
+            if sample.label == labelmap['covid']:
                 TEST_DATA['covid']['data'].append(imgdata)
                 TEST_DATA['covid']['label'].append(sample.label)
             else:
@@ -102,7 +103,7 @@ def mergesoure(META):
     for p in [TRAIN_PATH, TEST_PATH]:
         shutil.rmtree(p)
         os.makedirs(p)
-        for label in params['train']['labelmap'].keys():
+        for label in labelmap.keys():
             if not os.path.isdir(os.path.join(p, label)):
                 os.makedirs(os.path.join(p, label))
     n = len(META)
@@ -126,7 +127,7 @@ def dataset_split(META):
     # together
     META = META_train.append(META_test).sort_index()
     META = META.reset_index(drop=True)
-    META['label'] = META.label.map(params['train']['labelmap'])
+    META['label'] = META.label.map(labelmap)
     # to map images id from various sources
     META = META.reset_index().rename(columns={'index': 'imgid'})
     def _img(p):  # p -> patient (sample actually)

@@ -98,7 +98,7 @@ def tf_evaluate(sess, graph, meta, input_tensor, output_tensor, epoch):
                                                                              ppvs[params['train']['labelmap']['covid']]))
     """
     # plot and save normalized confusion matrix
-    plot_confusion_matrix(matrix, [labelmap_inv[x] for x in sorted(labelmap_inv)], epoch)
+    tf_plot_confusion_matrix(matrix, [labelmap_inv[x] for x in sorted(labelmap_inv)], epoch)
 
     return tprs, ppvs
 

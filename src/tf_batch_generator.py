@@ -34,7 +34,10 @@ _tf_augmentation_transform = ImageDataGenerator(
 
 
 class BalancedCovidBatch(keras.utils.Sequence):
-    'Generates COVID-label-balanced batch data for Keras'
+    """
+    Generates COVID-label-balanced batch data for Keras, 
+    weight of COVID class is a hyperparameter input
+    """
 
     def __init__(
             self,
@@ -55,10 +58,10 @@ class BalancedCovidBatch(keras.utils.Sequence):
             META = META[META.train==1]
         else:
             META = META[META.train!=1]
-        self.meta_noncovid = META[META.label!=params['train']['labelmap']['covid']]
-        self.meta_covid = META[META.label==params['train']['labelmap']['covid']]
+        self.meta_noncovid = META[META.label!=labelmap['covid']]
+        self.meta_covid = META[META.label==labelmap['covid']]
         self.n_covid = len(self.meta_covid)
-        self.n_class = len(params['train']['labelmap'])
+        self.n_class = len(labelmap)
 
     def __next__(self):
         # print('generating a batch..')
@@ -137,7 +140,7 @@ class _BalancedCovidBatch(keras.utils.Sequence):
         # inside class, but mostly form params
         self.n = 0  # batch index
         self.n_covid = len(data['covid']['label'])
-        self.n_class = len(params['train']['labelmap'])
+        self.n_class = len(labelmap)
 
     def __next__(self):
         # genereate one batch of data

@@ -34,7 +34,7 @@ def process_image_file(fn, top_percent, size):
     if fn[-3:] == 'dcm':  # .dcm
         ds = dicom.dcmread(fn)
         img = ds.pixel_array
-        img = cv2.merge((img,img,img))  # most CXR images are gray scale (3 depths have very similar or same values); checked
+        img = cv2.merge((img,img,img))  # CXR images are exactly or almost gray scale (meaning 3 depths have very similar or same values); checked
     else:  # .png., .jpeg, .jpg
         img = cv2.imread(fn)
     img = crop_top(img, percent=top_percent)
@@ -43,18 +43,43 @@ def process_image_file(fn, top_percent, size):
     return img
 
 
-def torch_make_weights_for_balanced_classes(images, nclasses):                        
-    count = [0] * nclasses                                                      
-    for item in images:                                                         
-        count[item[1]] += 1                                                     
-    weight_per_class = [0.] * nclasses                                      
-    N = float(sum(count))                                                   
-    for i in range(nclasses):                                                   
-        weight_per_class[i] = N/float(count[i])                                 
-    weight = [0] * len(images)                                              
-    for idx, val in enumerate(images):                                          
-        weight[idx] = weight_per_class[val[1]]                                  
-    return weight 
+def torch_balanced_covid_samples(images, nclasses, class_map, covid_weight=0.3):
+    """
+    for the torch model, balance sample weights for COVID class, the weight is a hyperparameter from input, 
+    making the sampling same as or close to how tensorflow model weight its samples from tf_batch_generator.py
+    which is weighting COVID class, while keeping other two: normal and pneumonia relatively same weight
+    ----------------------------------------
+    @parameter: 
+    :images:
+        list of tuples (image path, class index) where class index are 0-indexed integers mapped from sorted classes, 
+        see src.utils.class2index
+        or https://github.com/pytorch/vision/blob/4ec38d496db69833eb0a6f144ebbd6f751cd3912/torchvision/datasets/folder.py#L57 at _find_classes class method
+    @return:
+    :weight:
+        list
+        weights of each sample
+        no need to sum up to 1
+        see https://pytorch.org/docs/stable/_modules/torch/utils/data/sampler.html#WeightedRandomSampler
+    ----------------------------------------
+    """
+    count = [0] * nclasses
+    for item in images:
+        count[item[1]] += 1          
+    balanced_weight_per_class = [0.] * nclasses
+    original_weight_per_class = [0.] * nclasses
+    N = float(sum(count))
+    
+    original_covid_weight = count[class_map['covid']]/N
+    for i in range(nclasses):
+        original_weight_per_class[i] = float(count[i])/N
+        if class_map['covid'] == i:
+            balanced_weight_per_class[i] = covid_weight/(float(count[i])/N)
+        else:
+            balanced_weight_per_class[i] = (1-covid_weight)/(1-original_covid_weight)
+    weight = [0] * len(images)
+    for idx, val in enumerate(images):
+        weight[idx] = balanced_weight_per_class[val[1]]
+    return original_weight_per_class, balanced_weight_per_class, weight
 
 
 def random_ratio_resize(img, prob=0.3, delta=0.1):
@@ -137,3 +162,14 @@ def compute_batch_accuracy(output, target):
         correct = pred.eq(target).sum()
 
         return correct * 100.0 / batch_size
+    
+
+def class2index(classes):
+    """
+    to make sure class-index map is the SAME as what torchvision.datasets.folder does, 
+    so in thie program in torch model and tensorflow model the map is the SAME
+    for details about how torchvision.datasets.folder map class, refer to:
+    https://github.com/pytorch/vision/blob/4ec38d496db69833eb0a6f144ebbd6f751cd3912/torchvision/datasets/folder.py#L57
+    check '_find_class()' class method
+    """
+    return {classes[i]: i for i in range(len(sorted(classes)))}

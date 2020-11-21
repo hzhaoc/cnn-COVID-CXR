@@ -42,7 +42,7 @@ def tf_train():
     then isntall the package by
     'pip install --ignore-installed --upgrade /path/target.whl'
     """
-    from src.batch_generator import BalancedCovidBatch
+    from src.tf_batch_generator import BalancedCovidBatch
     
     # --------------------------------------------------------------------------------------------------------------------
     # DEPRECATED since loading large data into cache is too computing expensive
@@ -62,8 +62,8 @@ def tf_train():
     batch_generator = BalancedCovidBatch(
                                 is_training=True,
                                 batch_size=params['train']['batch_size'],
-                                batch_weight_covid=params['train']['batch_weight_covid'],
-                                class_weights=params['train']['class_weights']
+                                batch_weight_covid=params['train']['sample_weight_covid'],
+                                class_weights=params['train']['loss_weights']
     )
     # tensorflow session
     with tf.Session() as sess:
@@ -119,9 +119,9 @@ def tf_train():
             # pred = sess.run(pred_tensor, feed_dict={image_tensor: batch_x})
             # loss = sess.run(loss, feed_dict={pred_tensor: pred, labels_tensor: batch_y, sample_weights: weights})
             # train_losses.append(loss)
-            tpr, ppv = evaluate(sess, graph, meta[meta.train!=1].copy(deep=True), 
+            tpr, ppv = tf_evaluate(sess, graph, meta[meta.train!=1].copy(deep=True), 
                                 params['model']['tensorflow']['in_tensorname'], params['model']['tensorflow']['logit_tensorname'], epoch)
-            for label, i in params['train']['labelmap'].items():
+            for label, i in labelmap.items():
                 TPRs[label].append(tpr[i])  # this order is correct since sklearn.metrics.confusion_matrix is ordered by label integers
                 PPVs[label].append(ppv[i])  # same
             
@@ -131,14 +131,14 @@ def tf_train():
                       'COVID PPV {:.4f}\t'.format(epoch, 
                                                   i, 
                                                   n_batch, 
-                                                  tpr[params['train']['labelmap']['covid']], 
-                                                  ppv[params['train']['labelmap']['covid']]))
+                                                  tpr[labelmap['covid']], 
+                                                  ppv[labelmap['covid']]))
                 # eval(sess, graph, testfiles, os.path.join(args.datadir,'test'), args.in_tensorname, args.out_tensorname, args.input_size)
                 # saver.save(sess, os.path.join(runPath, 'model'), global_step=epoch+1, write_meta_graph=False)
                 # print('Saving checkpoint at epoch {}'.format(epoch + 1))
         
         # plot and save learning curves
-        plot_learning_curves(TPRs, PPVs)
+        tf_plot_learning_curves(TPRs, PPVs)
         
     print("training finished.")
 
@@ -150,7 +150,6 @@ def torch_train():
     from torchvision import datasets
     import torch.nn as nn
     import torch.optim as optim
-    from torchvision import datasets
     from torch.optim import lr_scheduler
 
     # data
@@ -166,9 +165,10 @@ def torch_train():
     # train data
     train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
     # train data -> balance sample classes
-    train_weights = torch_make_weights_for_balanced_classes(train_ds.imgs, len(train_ds.classes))
-    train_weights = torch.DoubleTensor(train_weights)                                       
-    train_sampler = torch.utils.data.sampler.WeightedRandomSampler(train_weights, len(train_weights))
+    torch_balanced_covid_samples(images, nclasses, class_map, covid_weight=0.3)
+    _, _, sample_weights = torch_balanced_covid_samples(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])
+    sample_weights = torch.DoubleTensor(sample_weights)
+    train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
                                                sampler = train_sampler, num_workers=1, pin_memory=True)
     # test data
@@ -182,7 +182,7 @@ def torch_train():
         valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
         best_val_loss = min(valid_losses)
         last_epoch = len(valid_losses)
-    else:  # start from a new model, wheter it's transfer learnign or not
+    else:  # start from a new model, wheter it's transfer learning or not
         model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
         last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
@@ -191,7 +191,9 @@ def torch_train():
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
     model.fc = nn.Linear(num_ftrs, len(train_ds.classes))
 
-    criterion = nn.CrossEntropyLoss()
+    loss_weights = [params['train']['loss_weights'][labelmap_inv[index]] for index in range(len(labelmap_inv))]
+    loss_weights = torch.FloatTensor(loss_weights)
+    criterion = nn.CrossEntropyLoss(weight=loss_weights)  # for weighted loss, see https://pytorch.org/docs/master/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss
     # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     optimizer = optim.Adam(model.parameters(), lr=params['train']['learning_rate'])
     # Decay LR by a factor of 0.1 every 7 epochs
@@ -308,9 +310,9 @@ def test():
         # train data
         train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
         # train data -> balance sample classes
-        train_weights = torch_make_weights_for_balanced_classes(train_ds.imgs, len(train_ds.classes))
-        train_weights = torch.DoubleTensor(train_weights)                                       
-        train_sampler = torch.utils.data.sampler.WeightedRandomSampler(train_weights, len(train_weights))
+        sample_weights = torch_make_weights_for_balanced_classes(train_ds.imgs, len(train_ds.classes))
+        sample_weights = torch.DoubleTensor(sample_weights)                                       
+        train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
         train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
                                                    sampler = train_sampler, num_workers=1, pin_memory=True)
         # test data
