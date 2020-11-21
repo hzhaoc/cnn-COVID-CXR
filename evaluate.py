@@ -173,13 +173,14 @@ def torch_plot_confusion_matrix(results, class_names):
     # transform to confusion matrix
     n_classes = len(class_names)
     counter = Counter(results)
-    res = pd.DataFrame()
+    res = pd.DataFrame(index=list(range(len(labelmap))), columns=list(range(len(labelmap))))
     for y_true in range(n_classes):
         for y_pred in range(n_classes):
             res.loc[y_true, y_pred] = counter[(y_true, y_pred)]
+    print('testing confusion matrix (freq): ', res)
     res = res / res.sum(axis=1)
-    res.sort_index(inplace=True)
-    res = res[list(range(n_classes))]
+    res.sort_index(inplace=True)  # sort row
+    res = res[list(range(n_classes))]  # sort column
     # plot heatmap
     fig = plt.figure(figsize=(10, 8))
     ax = plt.subplot(1, 1, 1)
