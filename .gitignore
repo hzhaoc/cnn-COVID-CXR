@@ -12,7 +12,5 @@
 *.gz
 *.tex
 *.docx
-/model
 /src/.ipynb_checkpoints
 /src/__pycache__
-!*.pth
