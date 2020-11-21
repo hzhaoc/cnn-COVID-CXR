@@ -22,6 +22,7 @@ def main():
     if params['model']['tool'] == 'torch':
         torch_train()
     elif (params['model']['tool'] == 'tensorflow') or (params['model']['tool'] == 'tf'):
+        params['model']['tool'] = 'tensorflow'
         tf_train()
     else:
         raise ValueError(f"Invalid model architect tool {params['model']['tool']}")
@@ -68,12 +69,12 @@ def tf_train():
     with tf.Session() as sess:
         tf.get_default_graph()
         print('loading pretrained model..')
-        saver = tf.train.import_meta_graph(os.path.join(params['model']['weightspath'], params['model']['metaname']))
+        saver = tf.train.import_meta_graph(os.path.join(params['model']['tensorflow']['weightspath'], params['model']['tensorflow']['metaname']))
         graph = tf.get_default_graph()
-        image_tensor = graph.get_tensor_by_name(params['train']['in_tensorname'])
-        labels_tensor = graph.get_tensor_by_name(params['train']['label_tensorname'])
-        sample_weights = graph.get_tensor_by_name(params['train']['weights_tensorname'])
-        pred_tensor = graph.get_tensor_by_name(params['train']['logit_tensorname'])
+        image_tensor = graph.get_tensor_by_name(params['model']['tensorflow']['in_tensorname'])
+        labels_tensor = graph.get_tensor_by_name(params['model']['tensorflow']['label_tensorname'])
+        sample_weights = graph.get_tensor_by_name(params['model']['tensorflow']['weights_tensorname'])
+        pred_tensor = graph.get_tensor_by_name(params['model']['tensorflow']['logit_tensorname'])
         # loss expects unscaled logits since it performs a softmax on logits internally for efficiency
 
         # Define loss and optimizer
@@ -89,7 +90,7 @@ def tf_train():
 
         # load weights
         print('loading checkpoints..')
-        saver.restore(sess, params['model']['ckptname'])  # absolute path
+        saver.restore(sess, params['model']['tensorflow']['ckptname'])  # absolute path
         # saver.restore(sess, os.path.join(params['model']['weightspath'], params['model']['ckptname']))  # relative path
         # saver.restore(sess, tf.train.latest_checkpoint(params['model']['weightspath']))
 
@@ -119,7 +120,7 @@ def tf_train():
             # loss = sess.run(loss, feed_dict={pred_tensor: pred, labels_tensor: batch_y, sample_weights: weights})
             # train_losses.append(loss)
             tpr, ppv = evaluate(sess, graph, meta[meta.train!=1].copy(deep=True), 
-                                params['train']['in_tensorname'], params['train']['logit_tensorname'], epoch)
+                                params['model']['tensorflow']['in_tensorname'], params['model']['tensorflow']['logit_tensorname'], epoch)
             for label, i in params['train']['labelmap'].items():
                 TPRs[label].append(tpr[i])  # this order is correct since sklearn.metrics.confusion_matrix is ordered by label integers
                 PPVs[label].append(ppv[i])  # same
@@ -175,7 +176,16 @@ def torch_train():
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model
-    model = torchvision.models.resnet50(pretrained=True)  # ResNet-50
+    if os.path.isfile(os.path.join('./model/', params['model']['name']+'.pth')):
+        model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))  # continut learning from self-trained model at last point
+        train_losses = pickle.load(open(os.path.join(SAVE_PATH,  'train.losses'), 'rb'))
+        valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
+        best_val_loss = min(valid_losses)
+        last_epoch = len(valid_losses)
+    else:
+        model = torchvision.models.resnet50(pretrained=True)  # transfer learning from a pretrained model
+        last_epoch, train_losses, valid_losses, best_val_loss = -1, [], [], np.inf
+
     num_ftrs = model.fc.in_features
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -189,35 +199,29 @@ def torch_train():
                                            gamma=params['train']['lr_decay']['gamma'])
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
+    device = torch.device("cpu")  # Hua's local computers cuda doesn't work very well in this program
     model.to(device)
     criterion.to(device)
     
-    train_losses, valid_losses = [], []
-    best_epoch = -1
-    best_val_los = 100
-    for epoch in range(params['train']['epochs']):
+    isupdated = 0
+    for epoch in range(last_epoch, last_epoch + params['train']['epochs']):
         train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
         valid_loss, valid_accuracy, valid_results = torch_evaluate(model, device, test_loader, criterion)
 
         train_losses.append(train_loss)
         valid_losses.append(valid_loss)
 
-        # is_best = valid_accuracy > best_val_acc  # let's keep the model that has the best accuracy, but you can also use another metric.
-        is_best = valid_loss < best_val_los
-        if is_best:
-            # best_val_acc = valid_accuracy
-            best_val_los, best_epoch = valid_loss, epoch
+        if valid_loss < best_val_loss:  # let's keep the model that has the best loss, but you can also use another metric.
+            isupdated, best_val_loss = 1, valid_loss
             torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
-            
+    
     torch_plot_learning_curves(train_losses, valid_losses)
 
-    best_model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
-    test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
+    if isupdated:  # if best model is updated
+        best_model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
+        test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
+        torch_plot_confusion_matrix(test_results, test_ds.classes)
 
-    torch_plot_confusion_matrix(test_results, test_ds.classes, best_epoch)
-    with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'last.epoch'), 'wb') as pickle_file:
-        pickle.dump(epoch, pickle_file, pickle.HIGHEST_PROTOCOL)
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'wb') as pickle_file:
         pickle.dump(train_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'wb') as pickle_file:
