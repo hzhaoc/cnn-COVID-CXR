@@ -153,7 +153,7 @@ def torch_train():
     from torch.optim import lr_scheduler
 
     # data
-    # pytorch augumentation, no need to use transforms.Normalize for TResNet, 
+    # pytorch augumentation, no need to use transforms.Normalize for [TResNet], 
     # see https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
     _pytorch_transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
@@ -176,10 +176,13 @@ def torch_train():
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model
-    if params['model']['torch']['continue_learning']:  # continut learning from self-trained model at last point, load saved model first
-        model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
-        train_losses = pickle.load(open(os.path.join(SAVE_PATH,  'train.losses'), 'rb'))
-        valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
+    if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
+        try:
+            model = torch.load(os.path.join('./model/', params['model']['name']+'.pth'))
+            train_losses = pickle.load(open(os.path.join(SAVE_PATH,  'train.losses'), 'rb'))
+            valid_losses = pickle.load(open(os.path.join(SAVE_PATH,  'valid.losses'), 'rb'))
+        except ValueError:
+            print('are the torch model, train.losses, valid_losses all saved?')
         best_val_loss = min(valid_losses)
         last_epoch = len(valid_losses)
     else:  # start from a new model, wheter it's transfer learning or not
