@@ -161,8 +161,7 @@ def torch_plot_learning_curves(train_losses, valid_losses):
     ax.set_xlabel('epoch')
     ax.set_ylabel('loss')
     ax.grid()
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'losses.png'))
-
+    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'losses.png'))
     pass
 
 
@@ -177,8 +176,7 @@ def torch_plot_confusion_matrix(results, class_names):
     for y_true in range(n_classes):
         for y_pred in range(n_classes):
             res.loc[y_true, y_pred] = counter[(y_true, y_pred)]
-    print('testing confusion matrix (freq): ', res)
-    res = res / res.sum(axis=1)
+    res = (res.T / res.sum(axis=1)).T
     res.sort_index(inplace=True)  # sort row
     res = res[list(range(n_classes))]  # sort column
     # plot heatmap
@@ -189,7 +187,7 @@ def torch_plot_confusion_matrix(results, class_names):
     ax.set_title('Normalized Confusion Matrix')
     ax.set_xlabel('Pred')
     ax.set_ylabel('True')
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'confusion_matrix_best_valid_loss.png'))
+    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_best_valid_loss.png'))
     pass
 
 
@@ -238,7 +236,7 @@ def _heatmap(data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **
                    labeltop=True, labelbottom=False)
 
     # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",
+    plt.setp(ax.get_xticklabels(), rotation=0, ha="right",
              rotation_mode="anchor")
 
     # Turn spines off and create white grid.

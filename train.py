@@ -177,6 +177,7 @@ def torch_train():
     
     # model
     if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
+        print('continue learning..')
         try:
             model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
             train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
@@ -186,6 +187,7 @@ def torch_train():
         best_val_loss = min(valid_losses)
         last_epoch = len(valid_losses)
     else:  # start from a new model, wheter it's transfer learning or not
+        print('transfer or fresh learning..')
         model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
         last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
@@ -209,6 +211,7 @@ def torch_train():
     criterion.to(device)
     
     isupdated = 0
+    print('testing curve lentgh before: ', len(train_losses)) 
     for epoch in range(last_epoch, last_epoch + params['train']['epochs']):
         train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
         valid_loss, valid_accuracy, valid_results = torch_evaluate(model, device, test_loader, criterion)
@@ -220,6 +223,7 @@ def torch_train():
             isupdated, best_val_loss = 1, valid_loss
             torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
     
+    print('testing curve lentgh after: ', len(train_losses))    
     torch_plot_learning_curves(train_losses, valid_losses)
 
     if isupdated:  # if best model is updated
@@ -300,78 +304,9 @@ def test():
         from torchvision import datasets
         from torch.optim import lr_scheduler
 
-        # data
-        # pytorch augumentation, no need to use transforms.Normalize for TResNet, 
-        # see https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
-        _pytorch_transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomRotation(10),
-                torchvision.transforms.ColorJitter(hue=.1, saturation=.1),
-                transforms.RandomGrayscale(p=0.1),
-                transforms.ToTensor()
-            ])
-        # train data
-        train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
-        # train data -> balance sample classes
-        sample_weights = torch_make_weights_for_balanced_classes(train_ds.imgs, len(train_ds.classes))
-        sample_weights = torch.DoubleTensor(sample_weights)                                       
-        train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
-        train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
-                                                   sampler = train_sampler, num_workers=1, pin_memory=True)
-        # test data
-        test_ds = datasets.ImageFolder(root='./data/test', transform=_pytorch_transform)
-        test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
-        
-        # model
-        model = torchvision.models.resnet50(pretrained=True)  # ResNet-50
-        num_ftrs = model.fc.in_features
-        # Here the size of each output sample is set to 2.
-        # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-        model.fc = nn.Linear(num_ftrs, len(train_ds.classes))
-
-        criterion = nn.CrossEntropyLoss()
-        # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-        optimizer = optim.Adam(model.parameters(), lr=params['train']['learning_rate'])
-        # Decay LR by a factor of 0.1 every 7 epochs
-        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=params['train']['lr_decay']['step_size'], 
-                                               gamma=params['train']['lr_decay']['gamma'])
-
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        device = torch.device("cpu")
-        model.to(device)
-        criterion.to(device)
-        
-        train_losses, valid_losses = [], []
-        best_epoch = -1
-        best_val_los = 100
-        for epoch in range(params['train']['epochs']):
-            train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
-            valid_loss, valid_accuracy, valid_results = torch_evaluate(model, device, test_loader, criterion)
-
-            train_losses.append(train_loss)
-            valid_losses.append(valid_loss)
-
-            # is_best = valid_accuracy > best_val_acc  # let's keep the model that has the best accuracy, but you can also use another metric.
-            is_best = valid_loss < best_val_los
-            if is_best:
-                # best_val_acc = valid_accuracy
-                best_val_los, best_epoch = valid_loss, epoch
-                torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
-                
-        torch_plot_learning_curves(train_losses, valid_losses)
-
-        best_model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
-        test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
-
-        torch_plot_confusion_matrix(test_results, test_ds.classes, best_epoch)
-        
-        with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'last.epoch'), 'wb') as pickle_file:
-            pickle.dump(epoch, pickle_file, pickle.HIGHEST_PROTOCOL)
-        with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'wb') as pickle_file:
-            pickle.dump(train_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
-        with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'wb') as pickle_file:
-            pickle.dump(valid_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
-    
+        train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
+        valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
+        print(len(train_losses), len(valid_losses))
     
 if __name__ == '__main__':
     main()
