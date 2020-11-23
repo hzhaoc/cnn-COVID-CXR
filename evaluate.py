@@ -178,11 +178,13 @@ def torch_plot_confusion_matrix(results, class_names):
             res.loc[y_true, y_pred] = counter[(y_true, y_pred)]
     res = (res.T / res.sum(axis=1)).T
     res.sort_index(inplace=True)  # sort row
-    res = res[list(range(n_classes))]  # sort column
+    res = res[sorted(res.columns)]  # sort column
+    # print('testing normed confusion matrix:\n', res.values.astype(float))
+    
     # plot heatmap
     fig = plt.figure(figsize=(10, 8))
     ax = plt.subplot(1, 1, 1)
-    im, cbar = _heatmap(res, class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)
+    im, cbar = _heatmap(res.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
     texts = _annotate_heatmap(im, valfmt="{x:.2f}")
     ax.set_title('Normalized Confusion Matrix')
     ax.set_xlabel('Pred')
