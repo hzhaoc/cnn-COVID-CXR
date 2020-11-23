@@ -179,7 +179,7 @@ def torch_train():
     if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
         print('continue learning..')
         try:
-            model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
+            model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.last.pth'))
             train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
             valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
         except ValueError:
@@ -221,13 +221,14 @@ def torch_train():
 
         if valid_loss < best_val_loss:  # let's keep the model that has the best loss, but you can also use another metric.
             isupdated, best_val_loss = 1, valid_loss
-            torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
+            torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
     
-    print('testing curve lentgh after: ', len(train_losses))    
+    torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.last.pth'))
+    print('testing curve lentgh after: ', len(train_losses))
     torch_plot_learning_curves(train_losses, valid_losses)
 
     if isupdated:  # if best model is updated
-        best_model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.pth'))
+        best_model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
         test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
         torch_plot_confusion_matrix(test_results, test_ds.classes)
 
