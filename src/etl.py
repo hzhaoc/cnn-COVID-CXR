@@ -50,9 +50,9 @@ INPUT_PATH_2_META = './data/source/Actualmed-COVID-chestxray-dataset-master/meta
 INPUT_PATH_3_0_IMG = './data/source/COVID-19-Radiography-Database/COVID-19'
 INPUT_PATH_3_1_IMG = './data/source/COVID-19-Radiography-Database/NORMAL'
 INPUT_PATH_3_2_IMG = './data/source/COVID-19-Radiography-Database/Viral Pneumonia'
-INPUT_PATH_3_0_META = './data/source/COVID-19-Radiography-Database/COVID-19.metadata.xlsx'
-INPUT_PATH_3_1_META = './data/source/COVID-19-Radiography-Database/NORMAL.metadata.xlsx'
-INPUT_PATH_3_2_META = './data/source/COVID-19-Radiography-Database/Viral Pneumonia.matadata.xlsx'
+INPUT_PATH_3_0_META = './data/source/COVID-19-Radiography-Database/COVID-19.metadata.csv'
+INPUT_PATH_3_1_META = './data/source/COVID-19-Radiography-Database/NORMAL.metadata.csv'
+INPUT_PATH_3_2_META = './data/source/COVID-19-Radiography-Database/Viral Pneumonia.matadata.csv'
 # src 4
 INPUT_PATH_4_META_1 = './data/source/rsna-pneumonia-detection-challenge/stage_2_detailed_class_info.csv' 
 INPUT_PATH_4_META = './data/source/rsna-pneumonia-detection-challenge/stage_2_train_labels.csv' 
@@ -241,7 +241,7 @@ def src3_img(row):
 
 
 def src3_etl(metapath, label):
-    df = pd.read_excel(metapath)
+    df = pd.read_csv(metapath)
     del df['SIZE']
     if label=='covid':
         # discard: # https://github.com/lindawangg/COVID-Net/blob/master/create_COVIDx.ipynb

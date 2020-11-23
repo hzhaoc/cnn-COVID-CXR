@@ -20,8 +20,8 @@ data:
   image_size: 224
 train:
   display_step: 1
-  epochs: 3
-  learning_rate: 0.0001
+  epochs: 2
+  learning_rate: 0.00003
   lr_decay:
     step_size: 7
     gamma: 0.1
