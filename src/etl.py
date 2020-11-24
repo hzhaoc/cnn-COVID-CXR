@@ -2,7 +2,7 @@
 # https://stackoverflow.com/questions/2429511/why-do-people-write-usr-bin-env-python-on-the-first-line-of-a-python-script
 
 """
-train.py: do ETL on source images
+etl.py: do ETL on source images
 Source 0: https://github.com/ieee8023/covid-chestxray-dataset
 Source 1: https://github.com/agchung/Figure1-COVID-chestxray-dataset
 Source 2: https://github.com/agchung/Actualmed-COVID-chestxray-dataset
@@ -258,6 +258,8 @@ def src3_etl(metapath, label):
 
 
 def src1_label(l):
+    if not l:
+        return 'other'
     l = l.lower()
     if 'pneumonia' in l:
         return 'pneumonia'
