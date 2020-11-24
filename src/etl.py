@@ -117,9 +117,9 @@ def mergesoure(META):
 def dataset_split(META):
     # train test split
     from sklearn.model_selection import train_test_split
-    train0, test0 = train_test_split(META[META.label=='covid'])
-    train1, test1 = train_test_split(META[META.label=='pneumonia'])
-    train2, test2 = train_test_split(META[META.label=='normal'])
+    train0, test0 = train_test_split(META[META.label=='covid'], train_size=params['etl']['train_size'], random_state=params['etl']['split_rand'])
+    train1, test1 = train_test_split(META[META.label=='pneumonia'], train_size=params['etl']['train_size'], random_state=params['etl']['split_rand'])
+    train2, test2 = train_test_split(META[META.label=='normal'], train_size=params['etl']['train_size'], random_state=params['etl']['split_rand'])
     META_train = train0.append(train1).append(train2)
     META_train['train'] = 1
     META_test = test0.append(test1).append(test2)

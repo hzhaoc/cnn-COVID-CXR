@@ -1,3 +1,7 @@
+etl:
+  use_spark: True
+  train_size: 0.75
+  split_rand: 15
 model:
   tool: 'torch'
   name: 'ResNet-50-test'

@@ -1,4 +1,3 @@
-- pyspark meta etl
 - feature visual
 - augmentation visual
 - iteration on resnet, covidnet

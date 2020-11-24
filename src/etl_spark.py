@@ -9,7 +9,23 @@ see ./src/etl.py for data sources
 __author__ = "Hua Zhao"
 
 from src.etl import *
-from src.rdd import CXR
+from src.utils_spark import CXR
+import pyspark
+from src.etl_spark import *
+
+
+spark = pyspark.sql.SparkSession \
+    .builder \
+    .appName("COVID-CXR META ETL") \
+    .config("spark.some.config.option", "xxx") \
+    .getOrCreate()
+
+try:
+    # once intialized, it's global in the jupyter notebook kernal; one context per notebook
+    sc = pyspark.SparkContext.getOrCreate('local[*]')
+except:
+    sc = pyspark.SparkContext('local[*]')
+# sqlc = pyspark.SQLContext
 
 
 def spark_etl():
@@ -19,7 +35,15 @@ def spark_etl():
     rdd3 = spark_etl_META_3()
     rdd4 = spark_etl_META_4()
     rdd = sc.union([rdd0, rdd1, rdd2, rdd3, rdd4])
-    return rdd
+    CXRs = rdd.collect()  # Action, to cache in pandas.dataframe
+    META = pd.DataFrame()
+    for i, cxr in enumerate(CXRs):
+        META.loc[i, 'patient'] = cxr.pid
+        META.loc[i, 'img'] = cxr.fn_src
+        META.loc[i, 'label'] = cxr.label
+        META.loc[i, 'src'] = cxr.src
+    META['src'] = META.src.astype(int)
+    return META
 
 
 def spark_etl_META_0():
