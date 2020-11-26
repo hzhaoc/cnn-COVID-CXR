@@ -8,7 +8,7 @@ model:
   name: 'resnet18'
   torch:
     transfer_learning: True
-    continue_learning: True
+    continue_learning: False
   tensorflow:
     weightspath: './model/COVIDNet-CXR-Small-test'
     metaname: 'model.meta'
@@ -25,14 +25,14 @@ data:
 train:
   display_step: 1
   epochs: 2
-  learning_rate: 0.00003
+  learning_rate: 0.0001
   lr_decay:
     step_size: 7
     gamma: 0.1
   batch_size: 32
-  sample_weight_covid: 0.4
+  sample_weight_covid: 0.3
   loss_weights:
-    covid: 6
+    covid: 5
     normal: 1
     pneumonia: 1
 evaluate:
