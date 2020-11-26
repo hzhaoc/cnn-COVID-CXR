@@ -152,6 +152,12 @@ def torch_train():
     import torch.optim as optim
     from torch.optim import lr_scheduler
 
+    # dirs
+    if not os.path.isdir(os.path.join('./model/', params['model']['name'])):
+        os.makedirs(os.path.join('./model/', params['model']['name']))
+    if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
+        os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
+
     # data
     # pytorch augumentation, no need to use transforms.Normalize for [TResNet], 
     # see https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
