@@ -20,7 +20,6 @@ model:
     weights_tensorname: 'dense_3_sample_weights:0'
 data:
   data_path: './data/'
-
   crop_top: 0.05
   image_size: 224
 train:
