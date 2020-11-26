@@ -28,19 +28,7 @@ def main():
 
 
 def tf_train():
-    # import tensorflow.compat.v1 as tf  # version 2.x
-    import tensorflow as tf  # version 1.x
-    """
-    NOTICE: 
-    tensorflow default builds DO NOT include CPU instructions that fasten matrix computation including avx, avx2, etc,.
-    see:
-    (https://stackoverflow.com/questions/47068709/your-cpu-supports-instructions-that-this-tensorflow-binary-was-not-compiled-to-u)
-    to solve this, download tailored wheel from:
-    (https://github.com/fo40225/tensorflow-windows-wheel/tree/master/2.1.0/py37/CPU%2BGPU/cuda102cudnn76avx2)
-    then isntall the package by
-    'pip install --ignore-installed --upgrade /path/target.whl'
-    """
-    from src.tf_batch_generator import BalancedCovidBatch
+    from src.tf_batch_generator import BalancedCovidBatch  # include tensorflow
     
     # --------------------------------------------------------------------------------------------------------------------
     # DEPRECATED since loading large data into cache is too computing expensive
@@ -48,7 +36,6 @@ def tf_train():
     #                        {'covid': {'data': list of size*size*3 numpy array, 'label': corresponding list of integer},
     #                        '!covid': {'data': list of size*size*3 numpy array, 'label': corresponding list of integer}}
     # check ./src/etl.py or ./etl.html for brief data description
-    # print('reading data..')
     # train_data = pickle.load(open(os.path.join(params['data']['data_path'], params['data']['trainfile']), 'rb'))
     # test_data  = pickle.load(open(os.path.join(SAVE_PATH,  'test.data'), 'rb'))
     # --------------------------------------------------------------------------------------------------------------------
@@ -152,7 +139,6 @@ def tf_train():
 def torch_train():
     import torch
     import torchvision as tv
-    import torchvision.transforms as transforms
     from torchvision import datasets
     import torch.nn as nn
     import torch.optim as optim
@@ -164,16 +150,6 @@ def torch_train():
     if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
 
-    # data
-    # pytorch augumentation, no need to use transforms.Normalize for [TResNet], 
-    # see https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
-    _pytorch_transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(10),
-            transforms.ColorJitter(hue=.1, saturation=.1),
-            transforms.RandomGrayscale(p=0.1),
-            transforms.ToTensor()
-        ])
     # train data
     train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
     # train data -> balance sample classes

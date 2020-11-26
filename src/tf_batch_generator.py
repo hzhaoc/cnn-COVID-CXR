@@ -8,26 +8,21 @@ batch_generator.py: source code to generate tensorflow tensor batches from image
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
-from src.utils import *
-import tensorflow as tf
+from src.etl import *
+# import tensorflow.compat.v1 as tf  # version 2.x
+import tensorflow as tf  # version 1.x
+"""
+NOTICE: 
+tensorflow default builds DO NOT include CPU instructions that fasten matrix computation including avx, avx2, etc,.
+see:
+(https://stackoverflow.com/questions/47068709/your-cpu-supports-instructions-that-this-tensorflow-binary-was-not-compiled-to-u)
+to solve this, download tailored wheel from:
+(https://github.com/fo40225/tensorflow-windows-wheel/tree/master/2.1.0/py37/CPU%2BGPU/cuda102cudnn76avx2)
+then isntall the package by
+'pip install --ignore-installed --upgrade /path/target.whl'
+"""
 from tensorflow import keras
 import cv2
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
-
-_tf_augmentation_transform = ImageDataGenerator(
-    featurewise_center=False,
-    featurewise_std_normalization=False,
-    rotation_range=10,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    horizontal_flip=True,
-    brightness_range=(0.9, 1.1),
-    zoom_range=(0.85, 1.15),
-    fill_mode='constant',
-    cval=0.,
-)
 
 
 class BalancedCovidBatch(keras.utils.Sequence):
