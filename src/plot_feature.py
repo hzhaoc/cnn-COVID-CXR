@@ -56,13 +56,13 @@ def plot_example_torch_features(example_num=1, model_name='test', architect=None
     
     model = torch.load(os.path.join('./model/', model_name, model_name+'.best.pth'))
     
-    if 'resnet-50' == architect.lower():
+    if 'resnet50' == architect.lower():
         grad_cam = GradCam(model=model, feature_module=model.layer4, target_layer_names=["2"], use_cuda=False)
-    elif 'resnet-18' == architect.lower():
+    elif 'resnet18' == architect.lower():
         grad_cam = GradCam(model=model, feature_module=model.layer4, target_layer_names=["1"], use_cuda=False)
-    elif 'vgg-19' == architect.lower():
+    elif 'vgg19' == architect.lower():
         grad_cam = GradCam(model=model, feature_module=model.features, target_layer_names=["36"], use_cuda=False)
-    elif 'vgg-11' == architect.lower():
+    elif 'vgg11' == architect.lower():
         grad_cam = GradCam(model=model, feature_module=model.features, target_layer_names=["20"], use_cuda=False)
     else:
         raise ValueError(f"Invalid model architect {architect}")

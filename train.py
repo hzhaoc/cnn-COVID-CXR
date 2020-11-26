@@ -145,7 +145,7 @@ def tf_train():
 
 def torch_train():
     import torch
-    import torchvision
+    import torchvision as tv
     import torchvision.transforms as transforms
     from torchvision import datasets
     import torch.nn as nn
@@ -158,7 +158,7 @@ def torch_train():
     _pytorch_transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(10),
-            torchvision.transforms.ColorJitter(hue=.1, saturation=.1),
+            transforms.ColorJitter(hue=.1, saturation=.1),
             transforms.RandomGrayscale(p=0.1),
             transforms.ToTensor()
         ])
@@ -176,6 +176,7 @@ def torch_train():
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model setup
+    arch = params['model']['architect']
     if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
         print('continue learning..')
         try:
@@ -188,15 +189,19 @@ def torch_train():
         last_epoch = len(valid_losses)
     else:  # start from a new model, wheter it's transfer learning or not
         print('transfer or fresh learning..')
-        model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
-        last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
-        # Here the size of each output sample is set to 3 obviously
-        if 'resnet' in model['model']['architect'].lower():
+        _models = {'resnet50': tv.models.resnet50, 'resnet18': tv.models.resnet18, 'vgg19': tv.models.vgg19, 'vgg11': tv.models.vgg11}
+        model = _models.get(arch)(pretrained=params['model']['torch']['transfer_learning'])
+        if model is None:
+            raise ValueError(f'wrong model architect {arch}')
+        # last layer output classe number is set to 3 obviously
+        if 'resnet' in arch.lower():
             num_ftrs = model.fc.in_features
-            model.fc = nn.Linear(num_ftrs, len(train_ds.classes))
-        if 'vgg' in model['model']['architect'].lower():
+            model.fc = nn.Linear(num_ftrs, len(labelmap))
+        if 'vgg' in arch.lower():
             num_ftrs = model.classifier[-1].in_features
-            model.classifier[-1] = nn.Linear(num_ftrs, len(train_ds.classes))
+            model.classifier[-1] = nn.Linear(num_ftrs, len(labelmap))
+
+        last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
     # traing, evaluate setup
     loss_weights = [params['train']['loss_weights'][labelmap_inv[index]] for index in range(len(labelmap_inv))]
@@ -289,28 +294,7 @@ def _torch_train(model, device, data_loader, criterion, optimizer, epoch, print_
 
 
 def test():
-    if False:
-        # tensorflow session
-        with tf.Session() as sess:
-            tf.get_default_graph()
-            saver = tf.train.import_meta_graph(os.path.join(params['model']['weightspath'], params['model']['metaname']))
-            graph = tf.get_default_graph()
-            for op in graph.get_operations():
-                if '/Softmax' in op.name:
-                    print(op.name)
-    else:
-        import torch
-        import torchvision
-        import torchvision.transforms as transforms
-        from torchvision import datasets
-        import torch.nn as nn
-        import torch.optim as optim
-        from torchvision import datasets
-        from torch.optim import lr_scheduler
-
-        train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
-        valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
-        print(len(train_losses), len(valid_losses))
+    pass
     
 if __name__ == '__main__':
     main()

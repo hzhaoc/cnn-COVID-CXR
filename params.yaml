@@ -4,8 +4,8 @@ etl:
   split_rand: 15
 model:
   tool: 'torch'
-  architect: 'ResNet-50'
-  name: 'ResNet-50-test'
+  architect: 'resnet18'
+  name: 'resnet18'
   torch:
     transfer_learning: True
     continue_learning: True
@@ -20,7 +20,7 @@ model:
     weights_tensorname: 'dense_3_sample_weights:0'
 data:
   data_path: './data/'
-  
+
   crop_top: 0.05
   image_size: 224
 train:
