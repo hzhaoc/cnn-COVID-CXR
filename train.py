@@ -22,6 +22,7 @@ def main():
     if params['model']['tool'] == 'pytorch':
         torch_train()
     elif (params['model']['tool'] == 'tensorflow') or (params['model']['tool'] == 'tf'):
+        print('starting tensorflow model..')
         params['model']['tool'] = 'tensorflow'
         tf_train()
     else:
@@ -68,7 +69,6 @@ def tf_train():
     # tensorflow session
     with tf.Session() as sess:
         tf.get_default_graph()
-        print('loading pretrained model..')
         saver = tf.train.import_meta_graph(os.path.join(params['model']['tensorflow']['weightspath'], params['model']['tensorflow']['metaname']))
         graph = tf.get_default_graph()
         image_tensor = graph.get_tensor_by_name(params['model']['tensorflow']['in_tensorname'])
@@ -89,9 +89,8 @@ def tf_train():
         sess.run(init)
 
         # load weights
-        print('loading checkpoints..')
-        saver.restore(sess, params['model']['tensorflow']['ckptname'])  # absolute path
-        # saver.restore(sess, os.path.join(params['model']['weightspath'], params['model']['ckptname']))  # relative path
+        # saver.restore(sess, params['model']['tensorflow']['ckptname'])  # absolte path
+        saver.restore(sess, os.path.join(params['model']['tensorflow']['weightspath'], params['model']['tensorflow']['ckptname']))  # relative path
         # saver.restore(sess, tf.train.latest_checkpoint(params['model']['weightspath']))
 
         # save base model
@@ -101,44 +100,54 @@ def tf_train():
         # eval(sess, graph, testfiles, os.path.join(args.datadir,'test'), args.in_tensorname, args.out_tensorname, args.input_size)
 
         # Training
-        print('Training started')
         n_batch = len(batch_generator)
         progbar = tf.keras.utils.Progbar(n_batch)
-        TPRs, PPVs = defaultdict(list) , defaultdict(list) 
+        if os.path.isfile(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'TPRs')):  # keep previous learning curves
+            TPRs = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'TPRs'), 'rb'))
+            PPVs = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'PPVs'), 'rb'))
+            last_epoch = len(TPRs[list(TPRs.keys())[0]])
+
+        else:  # start learning curves from refresh
+            TPRs, PPVs = defaultdict(list), defaultdict(list)
+            last_epoch = 0
         
-        for epoch in range(params['train']['epochs']):
+        for epoch in range(last_epoch, last_epoch + params['train']['epochs']):
             for i in range(n_batch):
                 _0 = time.time()
                 batch_x, batch_y, weights = next(batch_generator)
                 sess.run(train_op, feed_dict={image_tensor: batch_x, labels_tensor: batch_y, sample_weights: weights})
                 progbar.update(i+1)
                 _1 = time.time()
-                print(f"batch loss optimizing take {int(_1-_0)}s")
+                print(f" - batch loss optimizing take {int(_1-_0)}s")
 
-            print('calculating tpr, ppv from epoch..')
             # pred = sess.run(pred_tensor, feed_dict={image_tensor: batch_x})
             # loss = sess.run(loss, feed_dict={pred_tensor: pred, labels_tensor: batch_y, sample_weights: weights})
             # train_losses.append(loss)
             tpr, ppv = tf_evaluate(sess, graph, meta[meta.train!=1].copy(deep=True), 
                                 params['model']['tensorflow']['in_tensorname'], params['model']['tensorflow']['logit_tensorname'], epoch)
+            saver.save(sess, os.path.join('./model/', params['model']['name'], params['model']['name']), global_step=epoch+1, write_meta_graph=False)
+            print('Saving checkpoint at epoch {}'.format(epoch + 1))
+            
             for label, i in labelmap.items():
-                TPRs[label].append(tpr[i])  # this order is correct since sklearn.metrics.confusion_matrix is ordered by label integers
+                TPRs[label].append(tpr[i])  # this order is correct since sklearn.metrics.confusion_matrix is ordered by index that's the same index mapped from label
                 PPVs[label].append(ppv[i])  # same
             
             if (i+1) % params['train']['display_step'] == 0:
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'COVID TPR {:.4f}\t'
-                      'COVID PPV {:.4f}\t'.format(epoch, 
+                print('Epoch: [{}][{}/{}]\t'
+                      'COVID TPR {}\t'
+                      'COVID PPV {}\t'.format(epoch, 
                                                   i, 
                                                   n_batch, 
                                                   tpr[labelmap['covid']], 
                                                   ppv[labelmap['covid']]))
-                # eval(sess, graph, testfiles, os.path.join(args.datadir,'test'), args.in_tensorname, args.out_tensorname, args.input_size)
-                # saver.save(sess, os.path.join(runPath, 'model'), global_step=epoch+1, write_meta_graph=False)
-                # print('Saving checkpoint at epoch {}'.format(epoch + 1))
         
         # plot and save learning curves
         tf_plot_learning_curves(TPRs, PPVs)
+
+        with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'TPRs'), 'wb') as pickle_file:
+            pickle.dump(TPRs, pickle_file, pickle.HIGHEST_PROTOCOL)
+        with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'PPVs'), 'wb') as pickle_file:
+            pickle.dump(PPVs, pickle_file, pickle.HIGHEST_PROTOCOL)
         
     print("training finished.")
 

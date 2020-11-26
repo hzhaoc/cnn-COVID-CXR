@@ -116,7 +116,7 @@ class BalancedCovidBatch(keras.utils.Sequence):
 def augmentate(img):
     """img: numpy.ndarray x*y*z"""
     img = random_ratio_resize(img)
-    img = _augmentation_transform.random_transform(img)
+    img = _tf_augmentation_transform.random_transform(img)
     return img
 
 
