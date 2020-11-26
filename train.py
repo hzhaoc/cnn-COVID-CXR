@@ -12,6 +12,7 @@ train.py: script to train COVID-net model
 __author__ = "Hua Zhao"
 
 from evaluate import *
+from src.models import *
 
 
 def main():
@@ -195,23 +196,12 @@ def torch_train():
             train_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'rb'))
             valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
         except ValueError:
-            print('are the torch model, train.losses, valid_losses all saved?')
+            print('are the torch model, train.losses, valid_losses all cached?')
         best_val_loss = min(valid_losses)
         last_epoch = len(valid_losses)
     else:  # start from a new model, wheter it's transfer learning or not
         print('transfer or fresh learning..')
-        _models = {'resnet50': tv.models.resnet50, 'resnet18': tv.models.resnet18, 'vgg19': tv.models.vgg19, 'vgg11': tv.models.vgg11}
-        model = _models.get(arch)(pretrained=params['model']['torch']['transfer_learning'])
-        if model is None:
-            raise ValueError(f'wrong model architect {arch}')
-        # last layer output classe number is set to 3 obviously
-        if 'resnet' in arch.lower():
-            num_ftrs = model.fc.in_features
-            model.fc = nn.Linear(num_ftrs, len(labelmap))
-        if 'vgg' in arch.lower():
-            num_ftrs = model.classifier[-1].in_features
-            model.classifier[-1] = nn.Linear(num_ftrs, len(labelmap))
-
+        model = pytorch_model(architect='resnet18', pretrained=params['model']['torch']['transfer_learning'])
         last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
     # traing, evaluate setup

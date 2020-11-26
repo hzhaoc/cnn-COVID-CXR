@@ -7,6 +7,7 @@ models.py: custom pytorch models
 
 __author__ = "Hua Zhao"
 
+from src.glob import *
 import torchvision as tv
 
 
@@ -17,8 +18,8 @@ _models = {'resnet50': tv.models.resnet50,
 			}
 
 
-def pytorch_model(architect='resnet18'):
-    model = _models.get(architect)(pretrained=params['model']['torch']['transfer_learning'])
+def pytorch_model(architect='resnet18', pretrained=False):
+    model = _models.get(architect)(pretrained=pretrained)
     if model is None:
         raise ValueError(f'wrong model architect {architect}')
     # last layer output classe number is set to 3 obviously
