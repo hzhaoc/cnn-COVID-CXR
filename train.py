@@ -175,7 +175,7 @@ def torch_train():
     test_ds = datasets.ImageFolder(root='./data/test', transform=_pytorch_transform)
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
-    # model
+    # model setup
     if params['model']['torch']['continue_learning']:  # continue learning from self-trained model at last point, load saved model first
         print('continue learning..')
         try:
@@ -190,12 +190,15 @@ def torch_train():
         print('transfer or fresh learning..')
         model = torchvision.models.resnet50(pretrained=params['model']['torch']['transfer_learning'])  # model architect is ResNet-50 now
         last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
+        # Here the size of each output sample is set to 3 obviously
+        if 'resnet' in model['model']['architect'].lower():
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs, len(train_ds.classes))
+        if 'vgg' in model['model']['architect'].lower():
+            num_ftrs = model.classifier[-1].in_features
+            model.classifier[-1] = nn.Linear(num_ftrs, len(train_ds.classes))
 
-    num_ftrs = model.fc.in_features
-    # Here the size of each output sample is set to 2.
-    # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-    model.fc = nn.Linear(num_ftrs, len(train_ds.classes))
-
+    # traing, evaluate setup
     loss_weights = [params['train']['loss_weights'][labelmap_inv[index]] for index in range(len(labelmap_inv))]
     loss_weights = torch.FloatTensor(loss_weights)
     criterion = nn.CrossEntropyLoss(weight=loss_weights)  # for weighted loss, see https://pytorch.org/docs/master/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss
