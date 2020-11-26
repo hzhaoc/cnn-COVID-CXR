@@ -8,15 +8,12 @@ batch_generator.py: source code to generate tensorflow tensor batches from image
 
 __author__ = "Hua Zhao"
 
+from src.glob import *
+from src.utils import *
 import tensorflow as tf
 from tensorflow import keras
-import numpy as np
-import os
 import cv2
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from src.utils import *
-import copy
-from src.etl import *
 
 
 _tf_augmentation_transform = ImageDataGenerator(

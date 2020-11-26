@@ -11,11 +11,7 @@ train.py: script to train COVID-net model
 
 __author__ = "Hua Zhao"
 
-from src.etl import *  # to load params
-from src.utils import *
 from evaluate import *
-from collections import defaultdict
-import time
 
 
 def main():

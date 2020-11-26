@@ -11,7 +11,6 @@ __author__ = "Hua Zhao"
 from src.etl import *
 from src.utils_spark import CXR
 import pyspark
-from src.etl_spark import *
 
 
 spark = pyspark.sql.SparkSession \

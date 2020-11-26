@@ -10,16 +10,12 @@ evaluate.py: script to evaluate tensorflow model
 
 __author__ = "Hua Zhao"
 
+from src.glob import *
+from src.utils import *
 from sklearn.metrics import confusion_matrix
-import numpy as np
-import tensorflow as tf
-import os
 import cv2
-from src.etl import *  # to load params, global 'variables'
 import matplotlib.pyplot as plt
 import matplotlib
-from src.utils import *
-from collections import Counter
 
 
 @timmer(1, 0, 0)
@@ -311,6 +307,7 @@ def _annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=["black", "whi
 
 
 def test():
+    import tensorflow as tf
     sess = tf.Session()
     tf.get_default_graph()
     saver = tf.train.import_meta_graph(os.path.join(params['model']['weightspath'], params['model']['metaname']))

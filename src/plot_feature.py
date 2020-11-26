@@ -7,11 +7,10 @@ plot_feature.py: visualize model features from random samples to display ROI (re
 
 __author__ = "Hua Zhao"
 
-from src.etl import *
-from src.utils import *
-from gradcam.gradcam import *  # source code from https://github.com/jacobgil/pytorch-grad-cam
+from src.glob import *
+import torch
+from gradcam.gradcam import *  # https://github.com/jacobgil/pytorch-grad-cam
 from matplotlib import pyplot as plt
-import random
 
 
 def plot_features_from_random_example(example_num=1, model_tool='pytorch', architect=None, model_name=None, save_path='./output/', img_size_inch=6):
