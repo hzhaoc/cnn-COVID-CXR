@@ -1,8 +1,0 @@
-- feature visual
-- augmentation visual
-- iteration on resnet, covidnet
-- image preprocess: histogram equilization, data segmentation
-- preprocess visual
-- tresnet
-- new test sample
-- dvc

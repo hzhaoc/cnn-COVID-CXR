@@ -1,5 +1,5 @@
 *.pyc
-*.txt
+todo.txt
 .DS_Store
 *.log
 /.img
