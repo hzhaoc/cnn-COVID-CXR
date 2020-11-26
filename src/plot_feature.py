@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 import random
 
 
-def plot_features_from_random_example(example_num=1, model_tool='torch', architect=None, model_name=None, save_path='./output/', img_size_inch=6):
+def plot_features_from_random_example(example_num=1, model_tool='pytorch', architect=None, model_name=None, save_path='./output/', img_size_inch=6):
     """
     visialize model features for interpretation
     ---------------------------
@@ -28,7 +28,7 @@ def plot_features_from_random_example(example_num=1, model_tool='torch', archite
             - N/A
     ---------------------------
     """
-    if model_tool == 'torch':
+    if model_tool == 'pytorch':
         plot_example_torch_features(example_num=example_num, 
                                     model_name=model_name, 
                                     save_path=save_path,

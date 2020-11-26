@@ -19,7 +19,7 @@ import time
 
 
 def main():
-    if params['model']['tool'] == 'torch':
+    if params['model']['tool'] == 'pytorch':
         torch_train()
     elif (params['model']['tool'] == 'tensorflow') or (params['model']['tool'] == 'tf'):
         params['model']['tool'] = 'tensorflow'
