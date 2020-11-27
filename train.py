@@ -11,7 +11,7 @@ train.py: script to train COVID-net model
 
 __author__ = "Hua Zhao"
 
-from evaluate import *
+from src.evaluate import *
 from src.models import *
 from src.transform import _pytorch_transform, _tf_augmentation_transform
 
