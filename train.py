@@ -13,7 +13,7 @@ __author__ = "Hua Zhao"
 
 from evaluate import *
 from src.models import *
-from src.transform import *
+from src.transform import _pytorch_transform, _tf_augmentation_transform
 
 
 def main():
