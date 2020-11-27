@@ -12,10 +12,9 @@ __author__ = "Hua Zhao"
 
 from src.glob import *
 from src.utils import *
+from src.utils_plot import *
 from sklearn.metrics import confusion_matrix
 import cv2
-import matplotlib.pyplot as plt
-import matplotlib
 
 
 @timmer(1, 0, 0)
@@ -162,161 +161,51 @@ def torch_plot_learning_curves(train_losses, valid_losses):
 
 
 def torch_plot_confusion_matrix(results, class_names):
+    """
+    confusion matrix, TPR, PPV, sensitivity, precision, recall, etc,: 
+    https://en.wikipedia.org/wiki/Confusion_matrix
+    """
+    
     if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
         
     # transform to confusion matrix
     n_classes = len(class_names)
     counter = Counter(results)
-    res = pd.DataFrame(index=list(range(len(labelmap))), columns=list(range(len(labelmap))))
+    cmat = pd.DataFrame(index=list(range(len(labelmap))), columns=list(range(len(labelmap))))
     for y_true in range(n_classes):
         for y_pred in range(n_classes):
-            res.loc[y_true, y_pred] = counter[(y_true, y_pred)]
-    res = (res.T / res.sum(axis=1)).T
-    res.sort_index(inplace=True)  # sort row
-    res = res[sorted(res.columns)]  # sort column
-    # print('testing normed confusion matrix:\n', res.values.astype(float))
-    
+            cmat.loc[y_true, y_pred] = counter[(y_true, y_pred)]
+    cmat_hnorm = (cmat.T / cmat.sum(axis=1)).T  # horizontally normalized for TPR/Sensitivity/Recall, TNR/Specificity
+    cmat_vnorm = cmat / cmat.sum(axis=0)  # horizontally normalized for PPV/Precision, NPV
+    def _sort(mat):
+        mat.sort_index(inplace=True)
+        mat = mat[sorted(mat.columns)]
+        return mat
+    cmat_hnorm = _sort(cmat_hnorm)
+    cmat_vnorm = _sort(cmat_vnorm)
     # plot heatmap
     fig = plt.figure(figsize=(10, 8))
     ax = plt.subplot(1, 1, 1)
-    im, cbar = _heatmap(res.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
+    im, cbar = _heatmap(cmat_hnorm.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
     texts = _annotate_heatmap(im, valfmt="{x:.2f}")
-    ax.set_title('Normalized Confusion Matrix')
+    ax.set_title('Horizontally Normalized Confusion Matrix (TPR, TNR) of model lowest valid loss')
     ax.set_xlabel('Pred')
     ax.set_ylabel('True')
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_best_valid_loss.png'))
+    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_hnorm.png'))
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = plt.subplot(1, 1, 1)
+    im, cbar = _heatmap(cmat_vnorm.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
+    texts = _annotate_heatmap(im, valfmt="{x:.2f}")
+    ax.set_title('Vertically Normalized Confusion Matrix (PPV, NPV) of model lowest valid loss')
+    ax.set_xlabel('Pred')
+    ax.set_ylabel('True')
+    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_vnorm.png'))
     pass
 
 
-def _heatmap(data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs):
-    """
-    Create a heatmap from a numpy array and two lists of labels.
-
-    Parameters
-    ----------
-    data
-        A 2D numpy array of shape (N, M).
-    row_labels
-        A list or array of length N with the labels for the rows.
-    col_labels
-        A list or array of length M with the labels for the columns.
-    ax
-        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
-        not provided, use current axes or create a new one.  Optional.
-    cbar_kw
-        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
-    cbarlabel
-        The label for the colorbar.  Optional.
-    **kwargs
-        All other arguments are forwarded to `imshow`.
-    """
-
-    if not ax:
-        ax = plt.gca()
-
-    # Plot the heatmap
-    im = ax.imshow(data, **kwargs)
-
-    # Create colorbar
-    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-    cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
-
-    # We want to show all ticks...
-    ax.set_xticks(np.arange(data.shape[1]))
-    ax.set_yticks(np.arange(data.shape[0]))
-    # ... and label them with the respective list entries.
-    ax.set_xticklabels(col_labels)
-    ax.set_yticklabels(row_labels)
-
-    # Let the horizontal axes labeling appear on top.
-    ax.tick_params(top=True, bottom=False,
-                   labeltop=True, labelbottom=False)
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=0, ha="right",
-             rotation_mode="anchor")
-
-    # Turn spines off and create white grid.
-    for edge, spine in ax.spines.items():
-        spine.set_visible(False)
-
-    ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
-    ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
-    ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
-    ax.tick_params(which="minor", bottom=False, left=False)
-
-    return im, cbar
-
-
-def _annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=["black", "white"], threshold=None, **textkw):
-    """
-    A function to annotate a heatmap.
-
-    Parameters
-    ----------
-    im
-        The AxesImage to be labeled.
-    data
-        Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt
-        The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
-        `matplotlib.ticker.Formatter`.  Optional.
-    textcolors
-        A list or array of two color specifications.  The first is used for
-        values below a threshold, the second for those above.  Optional.
-    threshold
-        Value in data units according to which the colors from textcolors are
-        applied.  If None (the default) uses the middle of the colormap as
-        separation.  Optional.
-    **kwargs
-        All other arguments are forwarded to each call to `text` used to create
-        the text labels.
-    """
-
-    if not isinstance(data, (list, np.ndarray)):
-        data = im.get_array()
-
-    # Normalize the threshold to the images color range.
-    if threshold is not None:
-        threshold = im.norm(threshold)
-    else:
-        threshold = im.norm(data.max())/2.
-
-    # Set default alignment to center, but allow it to be
-    # overwritten by textkw.
-    kw = dict(horizontalalignment="center",
-              verticalalignment="center")
-    kw.update(textkw)
-
-    # Get the formatter in case a string is supplied
-    if isinstance(valfmt, str):
-        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
-
-    # Loop over the data and create a `Text` for each "pixel".
-    # Change the text's color depending on the data.
-    texts = []
-    for i in range(data.shape[0]):
-        for j in range(data.shape[1]):
-            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
-            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
-            texts.append(text)
-
-    return texts
-
-
 def test():
-    import tensorflow as tf
-    sess = tf.Session()
-    tf.get_default_graph()
-    saver = tf.train.import_meta_graph(os.path.join(params['model']['weightspath'], params['model']['metaname']))
-    saver.restore(sess, params['model']['ckptname'])
-    graph = tf.get_default_graph()
-    
-    META = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
-    META = META[META.train!=1].iloc[:100, :]  # test samples
-    evaluate(sess, graph, META.copy(deep=True), params['train']['in_tensorname'], params['train']['logit_tensorname'], 0)
     return
 
 
