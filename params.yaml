@@ -5,7 +5,7 @@ etl:
 model:
   tool: 'pytorch'
   architect: 'resnet18'
-  name: 'resnet18.224'
+  name: 'resnet18.iter1.224'
   torch:
     transfer_learning: True
     continue_learning: False
