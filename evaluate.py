@@ -185,24 +185,20 @@ def torch_plot_confusion_matrix(results, class_names):
     cmat_hnorm = _sort(cmat_hnorm)
     cmat_vnorm = _sort(cmat_vnorm)
     # plot heatmap
-    fig = plt.figure(figsize=(10, 8))
-    ax = plt.subplot(1, 1, 1)
-    im, cbar = _heatmap(cmat_hnorm.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
-    texts = _annotate_heatmap(im, valfmt="{x:.2f}")
-    ax.set_title('Horizontally Normalized Confusion Matrix (TPR, TNR) of model lowest valid loss')
-    ax.set_xlabel('Pred')
-    ax.set_ylabel('True')
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_hnorm.png'))
-
-    fig = plt.figure(figsize=(10, 8))
-    ax = plt.subplot(1, 1, 1)
-    im, cbar = _heatmap(cmat_vnorm.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
-    texts = _annotate_heatmap(im, valfmt="{x:.2f}")
-    ax.set_title('Vertically Normalized Confusion Matrix (PPV, NPV) of model lowest valid loss')
-    ax.set_xlabel('Pred')
-    ax.set_ylabel('True')
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'confusion_matrix_vnorm.png'))
-    pass
+    def _plot(df, fn):
+        fig = plt.figure(figsize=(10, 8))
+        ax = plt.subplot(1, 1, 1)
+        im, cbar = _heatmap(df.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
+        texts = _annotate_heatmap(im, valfmt="{x:.2f}")
+        ax.set_title('Horizontally Normalized Confusion Matrix (TPR, TNR) of model lowest valid loss')
+        ax.set_xlabel('Pred')
+        ax.set_ylabel('True')
+        fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'{fn}.png'))
+        return
+    _plot(cmat, 'confusion_matrix')
+    _plot(cmat_hnorm, 'confusion_matrix_hnorm')
+    _plot(cmat_vnorm, 'confusion_matrix_vnorm')
+    return
 
 
 def test():
