@@ -13,5 +13,6 @@ todo.txt
 *.gz
 *.tex
 *.docx
+*.ipynb
 /src/.ipynb_checkpoints
 /src/__pycache__
