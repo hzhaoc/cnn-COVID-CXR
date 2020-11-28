@@ -29,7 +29,8 @@ def main():
 
 
 def tf_train():
-    from src.label_balancer import TFBalancedCovidBatch  # include tensorflow
+    import tensorflow as tf  # version 1.x
+    from src.label_balancer import TFBalancedCovidBatch as BatchGenerator # include tensorflow
     
     # --------------------------------------------------------------------------------------------------------------------
     # DEPRECATED since loading large data into cache is too computing expensive
@@ -45,7 +46,7 @@ def tf_train():
     meta = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
 
     # batch generator
-    batch_generator = BalancedCovidBatch(
+    batch_generator = BatchGenerator(
                                 is_training=True,
                                 batch_size=params['train']['batch_size'],
                                 batch_weight_covid=params['train']['sample_weight_covid'],

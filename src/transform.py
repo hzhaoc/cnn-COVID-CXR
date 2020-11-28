@@ -156,7 +156,7 @@ class ImgPreprocessor:
 
 class Augmentator:
     def __init__(self, in_channel=3):
-        self._resizer_arr = RandImgResizer(prob=0.5, delta=0.1, in_dtype='array')
+        self._resizer = RandImgResizer(prob=0.5, delta=0.1)
         self._tf_augmentator = ImageDataGenerator(
                                                 featurewise_center=False,
                                                 featurewise_std_normalization=False,
@@ -178,8 +178,8 @@ class Augmentator:
         :img: numpy.ndarray
         :return: numpy.ndarray
         """
-        img = self._resizer_arr(img)
-        img = self._tf_augmentator.random_transform(img)
+        img = self._resizer(Image.fromarray(img))
+        img = self._tf_augmentator.random_transform(np.array(img))
         return img
 
     @property
@@ -187,8 +187,7 @@ class Augmentator:
         # pytorch augumentation, no need to use transforms.Normalize for [TResNet]: https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
         # custom transform: https://discuss.pytorch.org/t/how-to-use-custom-image-transformations-with-torchvision/71469
         _transforms = [
-                    # VFLip(),
-                    RandImgResizer(in_dtype='PIL'),  # custom transform only works on first few samples then raise TypeError (np.ndarray instead of PIL), cannot find out why, CONFUSED
+                    self._resizer,  # custom transform only works on first few samples then raise TypeError (np.ndarray instead of PIL), cannot find out why, CONFUSED
                     transforms.RandomHorizontalFlip(),
                     transforms.RandomRotation(10),
                     transforms.ColorJitter(hue=.1, saturation=.1),
@@ -209,28 +208,22 @@ class RandImgResizer(object):
     ---------------
     """
 
-    def __init__(self, prob=0.5, delta=0.1, in_dtype='PIL'):
+    def __init__(self, prob=0.5, delta=0.1):
         self.prob = prob
         self.delta = delta
-        self.in_dtype = in_dtype
-    
+
     def __call__(self, img):
         """
         ---------------
         @param
-        :img: PIL or array 
-        :delta: PIL
+        :img: PIL 
+        :return: PIL
         ---------------
         """
-        if self.in_dtype == 'PIL':
-            img = np.array(img)
-        elif self.in_dtype == 'array':
-            img = img
-        else:
-            raise ValueError(f'dtype {self.in_dtype} not allowed in RandImgResizer')
-
         if np.random.rand() >= self.prob:
-            return Image.fromarray(img)
+            return img
+
+        img = np.array(img)
 
         ratio = img.shape[0] / img.shape[1]
         ratio = np.random.uniform(max(ratio - self.delta, 0.01), ratio + self.delta)

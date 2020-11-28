@@ -55,7 +55,7 @@ class TFBalancedCovidBatch(keras.utils.Sequence):
         self.meta_covid = META[META.label==labelmap['covid']]
         self.n_covid = len(self.meta_covid)
         self.n_class = len(labelmap)
-        self.augmentator = Augmentator()
+        self.augmentator = Augmentator(in_channel=3)
 
     def __next__(self):
         # print('generating a batch..')
@@ -75,7 +75,7 @@ class TFBalancedCovidBatch(keras.utils.Sequence):
         fns = self.meta_noncovid.imgid.iloc[idx*self.batch_size:(idx+1)*self.batch_size].to_list()
         labels = self.meta_noncovid.label.iloc[idx*self.batch_size:(idx+1)*self.batch_size].to_list() # same order as file names 
         # batch size * length * width * depth
-        batch_x = np.zeros((len(fns), params['data']['image_size'], params['data']['image_size'], 3))
+        batch_x = np.zeros((len(fns), params['etl']['image_size'], params['etl']['image_size'], 3))
         # batch size
         batch_y = np.zeros(len(fns))
         
@@ -144,66 +144,3 @@ def pytorch_balanced_covid_samples(images, nclasses, class_map, covid_weight=0.3
     for idx, val in enumerate(images):
         weight[idx] = balanced_weight_per_class[val[1]]
     return original_weight_per_class, balanced_weight_per_class, weight
-
-
-class _BalancedCovidBatch(keras.utils.Sequence):
-    'Generates COVID-label-balanced batch data for Keras, this deprecated class uses img data as input, not img files'
-
-    def __init__(
-            self,
-            is_training=True,
-            data=None,
-            batch_size=32,
-            class_weights=dict(),
-            batch_weight_covid=.3,
-    ):
-        # input
-        self.data = data
-        self.is_training = is_training
-        self.batch_size = batch_size
-        self.batch_weight_covid = batch_weight_covid
-        self.class_weights = class_weights
-        # inside class, but mostly form params
-        self.n = 0  # batch index
-        self.n_covid = len(data['covid']['label'])
-        self.n_class = len(labelmap)
-
-    def __next__(self):
-        # genereate one batch of data
-        batch_x, batch_y, weights = self.__getitem__(self.n)
-        self.n += 1
-        # if reach dataset end, start over
-        if self.n >= self.__len__():
-            self.n = 0
-        return batch_x, batch_y, weights
-
-    def __len__(self):
-        return int(np.ceil(len(self.data['covid']['label']) / self.batch_size))
-
-    def __getitem__(self, idx):
-        # batch size * length * width * depth
-        batch_x = copy.deepcopy(sellf.data['!covid']['data'][idx*self.batch_size : (idx+1)*self.batch_size])
-        # batch size * label
-        batch_y = copy.deepcopy(sellf.data['!covid']['label'][idx*self.batch_size : (idx+1)*self.batch_size])
-        
-        # upsample covid cases, first bootstrap from covid data
-        _covid_size = max(int(len(batch_x) * self.batch_weight_covid), 1)
-        covid_inds = np.random.choice(np.arange(len(batch_x)), size=_covid_size, replace=False)
-        covid_bootstrap = np.random.choice(np.arange(self.n_covid), size=_covid_size, replace=False)
-        
-        # then randomly insert into and replace noncovid data in the batch
-        for i, j in zip(covid_inds, covid_bootstrap):
-            x = self.data['covid']['data'][j]
-            y = self.data['covid']['label'][j]
-                
-            if self.is_training:  # augmentate
-                x = augmentate(x)
-            
-            x = x.astype('float32') / 255.0  # RGB ~ [0, 255], normalize
-            
-            batch_x[i] = x
-            batch_y[i] = y
-
-        weights = [self.class_weights[labelmap_inv[i]] for i in batch_y]
-
-        return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_class), weights
