@@ -1,14 +1,22 @@
 etl:
+  data_path: './data/'
+  crop_top: 0.05
+  image_size: 480
   use_spark: True
-  train_size: 0.75
+  use_segmentation: True
+  use_CLAHE: True
+  CLAHE_clip_limit: 2.0
+  CLAHE_tile_size: 8
+  train_size: 0.8
   split_rand: 15
 model:
   tool: 'pytorch'
   architect: 'resnet18'
   name: 'resnet18.iter1.224'
   torch:
-    transfer_learning: True
+    in_channel: 1
     continue_learning: True
+    transfer_learning: True
   tensorflow:
     weightspath: './model/COVIDNet-CXR-Small-test'
     metaname: 'model.meta'
@@ -18,10 +26,6 @@ model:
     logit_tensorname: 'dense_3/MatMul:0'
     label_tensorname: 'dense_3_target:0'
     weights_tensorname: 'dense_3_sample_weights:0'
-data:
-  data_path: './data/'
-  crop_top: 0.05
-  image_size: 224
 train:
   display_step: 1
   epochs: 2
@@ -41,3 +45,7 @@ visual:
   feature:
     example_num: 5
     img_size_inch: 6
+  transform:
+    example_num: 5
+    img_size_inch: 5
+    save_path: './diag/'

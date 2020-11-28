@@ -23,9 +23,10 @@ then isntall the package by
 """
 from tensorflow import keras
 import cv2
+from src.transform import Augmentator
 
 
-class BalancedCovidBatch(keras.utils.Sequence):
+class TFBalancedCovidBatch(keras.utils.Sequence):
     """
     Generates COVID-label-balanced batch data for Keras, 
     weight of COVID class is a hyperparameter input
@@ -54,6 +55,7 @@ class BalancedCovidBatch(keras.utils.Sequence):
         self.meta_covid = META[META.label==labelmap['covid']]
         self.n_covid = len(self.meta_covid)
         self.n_class = len(labelmap)
+        self.augmentator = Augmentator()
 
     def __next__(self):
         # print('generating a batch..')
@@ -93,7 +95,7 @@ class BalancedCovidBatch(keras.utils.Sequence):
             # print('getting a sample in batch..')
             
             if self.is_training:  # augmentate
-                x = augmentate(x)
+                x = self.augmentator.tf_augmentate(x)
             
             x = x.astype('float32') / 255.0  # RGB ~ [0, 255], normalize
             
@@ -105,11 +107,43 @@ class BalancedCovidBatch(keras.utils.Sequence):
         return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_class), weights
 
 
-def augmentate(img):
-    """img: numpy.ndarray x*y*z"""
-    img = random_ratio_resize(img)
-    img = _tf_augmentation_transform.random_transform(img)
-    return img
+def pytorch_balanced_covid_samples(images, nclasses, class_map, covid_weight=0.3):
+    """
+    for the torch model, balance sample weights for COVID class, the weight is a hyperparameter from input, 
+    making the sampling same as or close to how tensorflow model weight its samples from tf_batch_generator.py
+    which is weighting COVID class, while keeping other two: normal and pneumonia relatively same weight
+    ----------------------------------------
+    @parameter: 
+    :images:
+        list of tuples (image path, class index) where class index are 0-indexed integers mapped from sorted classes, 
+        see src.utils.class2index
+        or https://github.com/pytorch/vision/blob/4ec38d496db69833eb0a6f144ebbd6f751cd3912/torchvision/datasets/folder.py#L57 at _find_classes class method
+    @return:
+    :weight:
+        list
+        weights of each sample
+        no need to sum up to 1
+        see https://pytorch.org/docs/stable/_modules/torch/utils/data/sampler.html#WeightedRandomSampler
+    ----------------------------------------
+    """
+    count = [0] * nclasses
+    for item in images:
+        count[item[1]] += 1          
+    balanced_weight_per_class = [0.] * nclasses
+    original_weight_per_class = [0.] * nclasses
+    N = float(sum(count))
+    
+    original_covid_weight = count[class_map['covid']]/N
+    for i in range(nclasses):
+        original_weight_per_class[i] = float(count[i])/N
+        if class_map['covid'] == i:
+            balanced_weight_per_class[i] = covid_weight/(float(count[i])/N)
+        else:
+            balanced_weight_per_class[i] = (1-covid_weight)/(1-original_covid_weight)
+    weight = [0] * len(images)
+    for idx, val in enumerate(images):
+        weight[idx] = balanced_weight_per_class[val[1]]
+    return original_weight_per_class, balanced_weight_per_class, weight
 
 
 class _BalancedCovidBatch(keras.utils.Sequence):

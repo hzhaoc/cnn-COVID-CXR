@@ -9,6 +9,7 @@ __author__ = "Hua Zhao"
 
 from src.glob import *
 import torchvision as tv
+import torch.nn as nn
 
 
 _models = {'resnet50': tv.models.resnet50, 
@@ -22,11 +23,14 @@ def pytorch_model(architect='resnet18', pretrained=False):
     model = _models.get(architect)(pretrained=pretrained)
     if model is None:
         raise ValueError(f'wrong model architect {architect}')
-    # last layer output classe number is set to 3 obviously
     if 'resnet' in architect.lower():
         num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, len(labelmap))
+        model.fc = nn.Linear(num_ftrs, len(labelmap))  # last layer output classe number is set to 3 obviously
+        if params['model']['torch']['in_channel'] == 1:  # default 3
+            model.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
     if 'vgg' in architect.lower():
         num_ftrs = model.classifier[-1].in_features
         model.classifier[-1] = nn.Linear(num_ftrs, len(labelmap))
+        if params['model']['torch']['in_channel'] == 1:  # default 3
+            model.features[0] = nn.Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))  # last layer output classe number is set to 3 obviously
     return model

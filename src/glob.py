@@ -27,7 +27,7 @@ params = yaml.safe_load(open("params.yaml", 'r'))
 labelmap = class2index(['covid', 'normal', 'pneumonia'])
 labelmap_inv = {v: k for k, v in labelmap.items()}
 # to save data
-SAVE_PATH = params['data']['data_path']
+SAVE_PATH = params['etl']['data_path']
 TRAIN_PATH = os.path.join(SAVE_PATH, 'train')
 TEST_PATH = os.path.join(SAVE_PATH, 'test')
 

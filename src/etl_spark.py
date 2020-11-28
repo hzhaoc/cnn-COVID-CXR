@@ -42,6 +42,7 @@ def spark_etl():
         META.loc[i, 'label'] = cxr.label
         META.loc[i, 'src'] = cxr.src
     META['src'] = META.src.astype(int)
+    print('done')
     return META
 
 

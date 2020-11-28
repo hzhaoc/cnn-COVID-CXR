@@ -14,60 +14,41 @@ __author__ = "Hua Zhao"
 
 from src.glob import *
 from src.utils import *
+from src.transform import *
 
 
-def datafromfile(META):
-    n = len(META)
-    TRAIN_DATA =  {'covid':  {'data': [], 'label': []},
-                   '!covid': {'data': [], 'label': []}}
-    TEST_DATA =   {'covid':  {'data': [], 'label': []},
-                   '!covid': {'data': [], 'label': []}}
-    for _, sample in META.iterrows():
-        if not os.path.isfile(sample.img):
-            print(f'missing: {sample.img}')
-            continue
-        imgdata = process_image_file(sample.img, params['data']['crop_top'], params['data']['image_size'])
-        if sample.train:
-            if sample.label == labelmap['covid']:
-                TRAIN_DATA['covid']['data'].append(imgdata)
-                TRAIN_DATA['covid']['label'].append(sample.label)
-            else:
-                TRAIN_DATA['!covid']['data'].append(imgdata)
-                TRAIN_DATA['!covid']['label'].append(sample.label)
-        else:
-            if sample.label == labelmap['covid']:
-                TEST_DATA['covid']['data'].append(imgdata)
-                TEST_DATA['covid']['label'].append(sample.label)
-            else:
-                TEST_DATA['!covid']['data'].append(imgdata)
-                TEST_DATA['!covid']['label'].append(sample.label)
-        print("progress: {0:.2f}%".format((_ + 1) * 100 / n), end="\r")
-    
-    # list2arr
-    TRAIN_DATA['covid']['data'] = np.array(TRAIN_DATA['covid']['data'])
-    TRAIN_DATA['covid']['label'] = np.array(TRAIN_DATA['covid']['label'])
-    TRAIN_DATA['!covid']['data'] = np.array(TRAIN_DATA['!covid']['data'])
-    TRAIN_DATA['!covid']['label'] = np.array(TRAIN_DATA['!covid']['label'])
-    TEST_DATA['covid']['data'] = np.array(TEST_DATA['covid']['data'])
-    TEST_DATA['covid']['label'] = np.array(TEST_DATA['covid']['label'])
-    TEST_DATA['!covid']['data'] = np.array(TEST_DATA['!covid']['data'])
-    TEST_DATA['!covid']['label'] = np.array(TEST_DATA['!covid']['label'])
-    return TRAIN_DATA, TEST_DATA
-
-
-def mergesoure(META):
-    """merge and process source images into images of same size in the train/test directory, ready for training"""
+def preprocess(META):
+    """
+    preprocess and save source images into pipeline
+    """
     for p in [TRAIN_PATH, TEST_PATH]:
         shutil.rmtree(p)
         os.makedirs(p)
         for label in labelmap.keys():
             if not os.path.isdir(os.path.join(p, label)):
                 os.makedirs(os.path.join(p, label))
+
+    _processor = ImgPreprocessor(CLAHE=params['etl']['use_CLAHE'], 
+                            crop_top=params['etl']['crop_top'], 
+                            size=params['etl']['image_size'], 
+                            clipLimit=params['etl']['CLAHE_clip_limit'],
+                            tileGridSize=(params['etl']['CLAHE_tile_size'], params['etl']['CLAHE_tile_size']),
+                            use_seg=params['etl']['use_segmentation'],
+    )
+    print(_processor)
     n = len(META)
     for _, sample in META.iterrows():
-        imgdata = process_image_file(sample.img, params['data']['crop_top'], params['data']['image_size'])
-        cv2.imwrite(sample.imgid, imgdata)
+        fn = sample.img
+        if fn[-3:] == 'dcm':  # .dcm
+            ds = dicom.dcmread(fn)
+            img = ds.pixel_array
+            img = cv2.merge((img,img,img))  # CXR images are exactly or almost gray scale (meaning 3 depths have very similar or same values); checked
+        else:  # .png., .jpeg, .jpg
+            img = cv2.imread(fn)
+        img = _processor(img)
+        cv2.imwrite(sample.imgid, img)
         print("progress: {0:.2f}%".format((_ + 1) * 100 / n), end="\r")
+    print('done')
     return
 
 
@@ -96,20 +77,15 @@ def dataset_split(META):
 
 
 def etl():
-    print(f'etl: META from src 0.. ')
     META_0 = etl_META_0()
-    print(f'etl: META from src 1.. ')
     META_1 = etl_META_1()
-    print(f'etl: META from src 2.. ')
     META_2 = etl_META_2()
-    print(f'etl: META from src 3.. ')
     META_3 = etl_META_3()
-    print(f'etl: META from src 4.. ')
     META_4 = etl_META_4()
     # together
     META = META_0.append(META_1).append(META_2).append(META_3).append(META_4)
     META.reset_index(drop=True, inplace=True)
-    print('done!')
+    print('done')
     return META
 
 

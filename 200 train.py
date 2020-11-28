@@ -11,9 +11,9 @@ train.py: script to train COVID-net model
 
 __author__ = "Hua Zhao"
 
-from src.evaluate import *
+from evaluate import *
 from src.models import *
-from src.transform import _pytorch_transform, _tf_augmentation_transform
+from src.transform import Augmentator
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
 
 
 def tf_train():
-    from src.tf_batch_generator import BalancedCovidBatch  # include tensorflow
+    from src.label_balancer import TFBalancedCovidBatch  # include tensorflow
     
     # --------------------------------------------------------------------------------------------------------------------
     # DEPRECATED since loading large data into cache is too computing expensive
@@ -144,6 +144,7 @@ def torch_train():
     import torch.nn as nn
     import torch.optim as optim
     from torch.optim import lr_scheduler
+    from src.label_balancer import pytorch_balanced_covid_samples as balancer
 
     # dirs
     if not os.path.isdir(os.path.join('./model/', params['model']['name'])):
@@ -152,16 +153,16 @@ def torch_train():
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
 
     # train data
-    train_ds = datasets.ImageFolder(root='./data/train', transform=_pytorch_transform)
+    augmentator = Augmentator()
+    train_ds = datasets.ImageFolder(root='./data/train', transform=augmentator.pytorch_aumentator)
     # train data -> balance sample classes
-
-    _, _, sample_weights = torch_balanced_covid_samples(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])
+    _, _, sample_weights = balancer(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])
     sample_weights = torch.DoubleTensor(sample_weights)
     train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
                                                sampler = train_sampler, num_workers=1, pin_memory=True)
     # test data
-    test_ds = datasets.ImageFolder(root='./data/test', transform=_pytorch_transform)
+    test_ds = datasets.ImageFolder(root='./data/test', transform=augmentator.pytorch_aumentator)
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
     
     # model setup
@@ -182,17 +183,14 @@ def torch_train():
         last_epoch, train_losses, valid_losses, best_val_loss = 0, [], [], np.inf
 
     # traing, evaluate setup
-    loss_weights = [params['train']['loss_weights'][labelmap_inv[index]] for index in range(len(labelmap_inv))]
-    loss_weights = torch.FloatTensor(loss_weights)
+    loss_weights = torch.FloatTensor([params['train']['loss_weights'][labelmap_inv[index]] for index in range(len(labelmap_inv))])
     criterion = nn.CrossEntropyLoss(weight=loss_weights)  # for weighted loss, see https://pytorch.org/docs/master/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss
     # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     optimizer = optim.Adam(model.parameters(), lr=params['train']['learning_rate'])
     # Decay LR by a factor of 0.1 every 7 epochs
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=params['train']['lr_decay']['step_size'], 
-                                           gamma=params['train']['lr_decay']['gamma'])
-
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=params['train']['lr_decay']['step_size'], gamma=params['train']['lr_decay']['gamma'])
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")  # Hua's local computers cuda doesn't work very well in this program
+    device = torch.device("cpu")  # cuda not working well in my local machine
     model.to(device)
     criterion.to(device)
     
