@@ -8,6 +8,7 @@ utils.py: utility function storage
 __author__ = "Hua Zhao"
 
 import time
+import torch
 
 
 def timmer(flagtime=True, flagname=True, flagdoc=True):

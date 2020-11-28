@@ -153,14 +153,12 @@ def torch_train():
         os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
 
     # train data
-    augmentator = Augmentator()
+    augmentator = Augmentator(in_channel=params['model']['torch']['in_channel'])
     train_ds = datasets.ImageFolder(root='./data/train', transform=augmentator.pytorch_aumentator)
-    # train data -> balance sample classes
-    _, _, sample_weights = balancer(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])
+    _, _, sample_weights = balancer(train_ds.imgs, len(train_ds.classes), train_ds.class_to_idx, params['train']['sample_weight_covid'])  # train data -> balance sample classes
     sample_weights = torch.DoubleTensor(sample_weights)
     train_sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
-    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'],
-                                               sampler = train_sampler, num_workers=1, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=params['train']['batch_size'], sampler=train_sampler, num_workers=1, pin_memory=True)
     # test data
     test_ds = datasets.ImageFolder(root='./data/test', transform=augmentator.pytorch_aumentator)
     test_loader = torch.utils.data.DataLoader(test_ds, batch_size=params['train']['batch_size'], shuffle=True, num_workers=1)
@@ -195,7 +193,7 @@ def torch_train():
     criterion.to(device)
     
     isupdated = 0
-    print('testing curve lentgh before: ', len(train_losses)) 
+    print('preloaded curve lentgh: ', len(train_losses)) 
     for epoch in range(last_epoch, last_epoch + params['train']['epochs']):
         train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
         valid_loss, valid_accuracy, valid_results = torch_evaluate(model, device, test_loader, criterion)
@@ -208,7 +206,7 @@ def torch_train():
             torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
     
     torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.last.pth'))
-    print('testing curve lentgh after: ', len(train_losses))
+    print('aftertraining curve lentgh: ', len(train_losses))
     torch_plot_learning_curves(train_losses, valid_losses)
 
     if isupdated:  # if best model is updated

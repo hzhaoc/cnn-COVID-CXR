@@ -12,10 +12,10 @@ etl:
 model:
   tool: 'pytorch'
   architect: 'resnet18'
-  name: 'resnet18.iter1.224'
+  name: 'resnet18.iter2.480'
   torch:
     in_channel: 1
-    continue_learning: True
+    continue_learning: False
     transfer_learning: True
   tensorflow:
     weightspath: './model/COVIDNet-CXR-Small-test'
@@ -28,7 +28,7 @@ model:
     weights_tensorname: 'dense_3_sample_weights:0'
 train:
   display_step: 1
-  epochs: 2
+  epochs: 3
   learning_rate: 0.00003
   lr_decay:
     step_size: 7

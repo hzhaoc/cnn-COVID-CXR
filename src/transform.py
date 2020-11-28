@@ -15,49 +15,6 @@ import numpy as np
 from PIL import Image
 
 
-class Augmentator:
-    def __init__(self):
-        self._resizer_arr = RandImgResizer(prob=0.5, delta=0.1, dtype='array')
-        self._tf_augmentator = ImageDataGenerator(
-                                                featurewise_center=False,
-                                                featurewise_std_normalization=False,
-                                                rotation_range=10,
-                                                width_shift_range=0.1,
-                                                height_shift_range=0.1,
-                                                horizontal_flip=True,
-                                                brightness_range=(0.9, 1.1),
-                                                zoom_range=(0.85, 1.15),
-                                                fill_mode='constant',
-                                                cval=0.,
-                                                )
-        self._resizer_pil = RandImgResizer(prob=0.5, delta=0.1, dtype='PIL')
-        self._pytorch_augmentator = transforms.Compose([
-                                                _resizer_pil(),  # custom, https://discuss.pytorch.org/t/how-to-use-custom-image-transformations-with-torchvision/71469
-                                                transforms.RandomHorizontalFlip(),
-                                                transforms.RandomRotation(10),
-                                                transforms.ColorJitter(hue=.1, saturation=.1),
-                                                transforms.RandomGrayscale(p=0.1),
-                                                transforms.ToTensor()]
-                                                )
-
-    def tf_augmentate(self, img):
-        """
-        tensorflow augumentation
-        @param
-        :img: numpy.ndarray
-        :return: numpy.ndarray
-        """
-        img = self._resizer_arr(img)
-        img = self._tf_augmentator.random_transform(img)
-        return img
-
-    @property
-    def pytorch_aumentator(self):
-        # pytorch augumentation, no need to use transforms.Normalize for [TResNet], 
-        # see https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
-        return self._pytorch_augmentator
-
-
 class ImgPreprocessor:
     """
     process an image in array to desired form
@@ -188,16 +145,61 @@ class ImgPreprocessor:
             cnt = contours[j]
             area[j] = cv2.contourArea(cnt)
         mask = np.zeros(image.shape)
-        cv2.drawContours(mask, contours, np.argmax(area), (255), -1)#draw largest contour-usually right lung   
+        cv2.drawContours(mask, contours, np.argmax(area), (255), -1)  # draw largest contour-usually right lung   
         temp = np.copy(area[np.argmax(area)])
         area[np.argmax(area)]=0
-        if area[np.argmax(area)] > temp/10:#make sure 2nd largest contour is also lung, not 2 lungs connected
+        if area[np.argmax(area)] > temp/10:  # make sure 2nd largest contour is also lung, not 2 lungs connected
             cv2.drawContours(mask, contours, np.argmax(area), (255), -1)#draw second largest contour  
         contours.clear() 
         return mask
 
 
-class RandImgResizer:
+class Augmentator:
+    def __init__(self, in_channel=3):
+        self._resizer_arr = RandImgResizer(prob=0.5, delta=0.1, in_dtype='array')
+        self._tf_augmentator = ImageDataGenerator(
+                                                featurewise_center=False,
+                                                featurewise_std_normalization=False,
+                                                rotation_range=10,
+                                                width_shift_range=0.1,
+                                                height_shift_range=0.1,
+                                                horizontal_flip=True,
+                                                brightness_range=(0.9, 1.1),
+                                                zoom_range=(0.85, 1.15),
+                                                fill_mode='constant',
+                                                cval=0.,
+                                                )
+        self.in_channel = in_channel
+
+    def tf_augmentate(self, img):
+        """
+        tensorflow augumentation
+        @param
+        :img: numpy.ndarray
+        :return: numpy.ndarray
+        """
+        img = self._resizer_arr(img)
+        img = self._tf_augmentator.random_transform(img)
+        return img
+
+    @property
+    def pytorch_aumentator(self):
+        # pytorch augumentation, no need to use transforms.Normalize for [TResNet]: https://github.com/mrT23/TResNet/issues/5#issuecomment-608440989
+        # custom transform: https://discuss.pytorch.org/t/how-to-use-custom-image-transformations-with-torchvision/71469
+        _transforms = [
+                    # VFLip(),
+                    RandImgResizer(in_dtype='PIL'),  # custom transform only works on first few samples then raise TypeError (np.ndarray instead of PIL), cannot find out why, CONFUSED
+                    transforms.RandomHorizontalFlip(),
+                    transforms.RandomRotation(10),
+                    transforms.ColorJitter(hue=.1, saturation=.1),
+                    transforms.RandomGrayscale(p=0.1),
+                    transforms.ToTensor()]
+        if self.in_channel == 1:
+            _transforms.insert(0, transforms.Grayscale())
+        return transforms.Compose(_transforms)
+
+
+class RandImgResizer(object):
     """
     Rnadom Ratio Resize image
     ---------------
@@ -207,21 +209,29 @@ class RandImgResizer:
     ---------------
     """
 
-    def __init__(self, prob=0.5, delt=0.1, dtype='PIL'):
+    def __init__(self, prob=0.5, delta=0.1, in_dtype='PIL'):
         self.prob = prob
         self.delta = delta
-        self.dtype = dtype
+        self.in_dtype = in_dtype
     
     def __call__(self, img):
-        if self.dtype == 'PIL':
-            img = numpy.asarray(img)
-        elif self.dtype == 'array':
+        """
+        ---------------
+        @param
+        :img: PIL or array 
+        :delta: PIL
+        ---------------
+        """
+        if self.in_dtype == 'PIL':
+            img = np.array(img)
+        elif self.in_dtype == 'array':
             img = img
         else:
-            raise ValueError(f'dtype {dtype} not allowed in RandImgResizer')
+            raise ValueError(f'dtype {self.in_dtype} not allowed in RandImgResizer')
 
         if np.random.rand() >= self.prob:
-            return img
+            return Image.fromarray(img)
+
         ratio = img.shape[0] / img.shape[1]
         ratio = np.random.uniform(max(ratio - self.delta, 0.01), ratio + self.delta)
 
@@ -235,16 +245,10 @@ class RandImgResizer:
         dw = img.shape[1] - size[0]
         left, right = dw // 2, dw - dw // 2
 
-        # if size[0] > 480 or size[1] > 480:
-        #     print(img.shape, size, ratio)
-
         img = cv2.resize(img, size)
-        img = cv2.copyMakeBorder(img, top, bot, left, right, cv2.BORDER_CONSTANT,
-                                 (0, 0, 0))
+        img = cv2.copyMakeBorder(img, top, bot, left, right, cv2.BORDER_CONSTANT, (0, 0, 0))
 
-        # if img.shape[0] != 480 or img.shape[1] != 480:
-        #     raise ValueError(img.shape, size)
-        return Image.fromarray(img) if self.dtype=='PIL' else img
+        return Image.fromarray(img)
 
     def __repr__(self):
         return self.__class__.__name__+'()'
