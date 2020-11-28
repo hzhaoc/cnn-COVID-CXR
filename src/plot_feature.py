@@ -13,7 +13,12 @@ from gradcam.gradcam import *  # https://github.com/jacobgil/pytorch-grad-cam
 from matplotlib import pyplot as plt
 
 
-def plot_features_from_random_example(example_num=1, model_tool='pytorch', architect=None, model_name=None, save_path='./output/', img_size_inch=6):
+def plot_features_from_random_example(example_num=1, 
+                                    model_tool='pytorch', 
+                                    architect=None, 
+                                    model_name=None, 
+                                    save_path='./output/', 
+                                    img_size_inch=6):
     """
     # visualize model features from random samples to display ROI (regions of interest) the moodel focuses on
     ---------------------------
@@ -100,7 +105,7 @@ def plot_example_torch_features(example_num=1, model_name='test', architect=None
         title = f'feature example {example+1}'
         fig.suptitle(title, fontsize=16)
         plt.show()
-        fig.savefig(os.path.join(save_path, f'{title}.png'))
+        fig.savefig(os.path.join(save_path, f'{model_name}.feature.{example+1}.png'))
     return
 
 
