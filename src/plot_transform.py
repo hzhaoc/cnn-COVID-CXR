@@ -12,13 +12,14 @@ from matplotlib import pyplot as plt
 from src.transform import *
 
 
-def plot_example_transforms(example_num=5, save_path='./diag/', size=5):
+def plot_example_transforms(example_num=5, save_path='./diag/', size=5, use_seg=False):
     """
     visualize random original and transformed training or testing images
     """
     _processor = ImgPreprocessor(CLAHE=params['etl']['use_CLAHE'], 
                             crop_top=params['etl']['crop_top'], 
                             size=params['etl']['image_size'], 
+                            use_seg=use_seg,
                             clipLimit=params['etl']['CLAHE_clip_limit'],
                             tileGridSize=(params['etl']['CLAHE_tile_size'], params['etl']['CLAHE_tile_size'])
     )
@@ -27,7 +28,7 @@ def plot_example_transforms(example_num=5, save_path='./diag/', size=5):
     os.makedirs(save_path)
 
     meta = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
-    fns = np.random.choice(meta.img, 10)
+    fns = np.random.choice(meta.img, example_num)
     
     fig, axs = plt.subplots(len(fns), 2, constrained_layout=True)
     fig.set_size_inches(size*2, size*len(fns))
@@ -43,10 +44,10 @@ def plot_example_transforms(example_num=5, save_path='./diag/', size=5):
         img_pre = cv2.resize(img, (params['etl']['image_size'], params['etl']['image_size']))
         img_cur = _processor(img)
 
-        axs[i, 0].imshow(img_pre)
+        axs[i, 0].imshow(img_pre, cmap='gray')
         axs[i, 0].set_title(f"example {i+1} - original")
         
-        axs[i, 1].imshow(img_cur)
+        axs[i, 1].imshow(img_cur, cmap='gray')
         axs[i, 1].set_title(f"example {i+1} - transformed")
 
     title = f'images: original vs transformed'

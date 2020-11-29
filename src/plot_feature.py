@@ -18,7 +18,10 @@ def plot_features_from_random_example(example_num=1,
                                     architect=None, 
                                     model_name=None, 
                                     save_path='./output/', 
-                                    img_size_inch=6):
+                                    img_size_inch=6,
+                                    in_channel=3,
+                                    img_size=224,
+):
     """
     # visualize model features from random samples to display ROI (regions of interest) the moodel focuses on
     ---------------------------
@@ -37,18 +40,24 @@ def plot_features_from_random_example(example_num=1,
                                     model_name=model_name, 
                                     save_path=save_path,
                                     architect=architect,
-                                    img_size_inch=img_size_inch)
+                                    img_size_inch=img_size_inch,
+                                    in_channel=in_channel,
+                                    img_size=224,
+                                    )
     elif (model_tool == 'tensorflow') or (model_tool == 'tf'):
         plot_example_tf_features(example_num=example_num, 
                                  model_name=model_name, 
                                  save_path=save_path,
                                  architect=architect,
-                                 img_size_inch=img_size_inch)
+                                 img_size_inch=img_size_inch,
+                                 in_channel=in_channel,
+                                 img_size=224,
+                                 )
     else:
         raise ValueError(f"Invalid model architect tool {model_too}")
 
 
-def plot_example_torch_features(example_num=1, model_name='test', architect=None, save_path='./output/', img_size_inch=6):
+def plot_example_torch_features(example_num=1, model_name='test', architect=None, save_path='./output/', img_size_inch=6, in_channel=3, img_size=224):
     """
     python grad_cam.py <path_to_image>
     1. Loads an image with opencv.
@@ -80,10 +89,13 @@ def plot_example_torch_features(example_num=1, model_name='test', architect=None
 
             rand_idx = random.choice(meta[meta.label==label_i].index)
 
-            img = cv2.imread(meta.loc[rand_idx, 'imgid'], 1)
-            img = np.float32(cv2.resize(img, (224, 224))) / 255
-
+            img = cv2.imread(meta.loc[rand_idx, 'imgid'], 1)  # cv2.IMREAD_COLOR
+            # img = cv2.imread(meta.loc[rand_idx, 'imgid'], cv2.IMREAD_GRAYSCALE)  # 0
+            img = np.float32(cv2.resize(img, (img_size, img_size))) / 255
+            
             input1 = preprocess_image(img)
+            if in_channel == 1:
+                input1 = input1[:, 0, :, :].reshape((1, 1, img_size, img_size))  # since source images are almost gray, scicing RGB is okay
 
             # If None, returns the map for the highest scoring category.
             # Otherwise, targets the requested index.

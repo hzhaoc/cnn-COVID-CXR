@@ -12,7 +12,9 @@ __author__ = "Hua Zhao"
 
 from src.glob import *
 from src.utils import *
-from src.utils_plot import *
+from src.utils_plot import _heatmap, _annotate_heatmap
+import matplotlib.pyplot as plt
+import matplotlib
 from sklearn.metrics import confusion_matrix
 import cv2
 

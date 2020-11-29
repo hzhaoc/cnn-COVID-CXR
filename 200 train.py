@@ -174,8 +174,7 @@ def torch_train():
             valid_losses = pickle.load(open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'rb'))
         except ValueError:
             print('are the torch model, train.losses, valid_losses all cached?')
-        best_val_loss = min(valid_losses)
-        last_epoch = len(valid_losses)
+        best_val_loss, last_epoch = min(valid_losses), len(valid_losses)
     else:  # start from a new model, wheter it's transfer learning or not
         print('transfer or fresh learning..')
         model = pytorch_model(architect='resnet18', pretrained=params['model']['torch']['transfer_learning'])
@@ -198,27 +197,26 @@ def torch_train():
     for epoch in range(last_epoch, last_epoch + params['train']['epochs']):
         train_loss, train_accuracy = _torch_train(model, device, train_loader, criterion, optimizer, epoch)
         valid_loss, valid_accuracy, valid_results = torch_evaluate(model, device, test_loader, criterion)
-
         train_losses.append(train_loss)
         valid_losses.append(valid_loss)
-
-        if valid_loss < best_val_loss:  # let's keep the model that has the best loss, but you can also use another metric.
+        # save last model
+        torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.last.pth'))
+        # save best model (lowest valid loss)
+        if valid_loss < best_val_loss:
             isupdated, best_val_loss = 1, valid_loss
             torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
-    
-    torch.save(model, os.path.join('./model/', params['model']['name'], params['model']['name']+'.last.pth'))
+    # save training losses and plot it
     print('aftertraining curve lentgh: ', len(train_losses))
-    torch_plot_learning_curves(train_losses, valid_losses)
-
-    if isupdated:  # if best model is updated
-        best_model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
-        test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
-        torch_plot_confusion_matrix(test_results, test_ds.classes)
-
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'train.losses'), 'wb') as pickle_file:
         pickle.dump(train_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
     with open(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'valid.losses'), 'wb') as pickle_file:
         pickle.dump(valid_losses, pickle_file, pickle.HIGHEST_PROTOCOL)
+    torch_plot_learning_curves(train_losses, valid_losses)
+    # plot best model's confusion matrix
+    if isupdated or params['train']['replot']:
+        best_model = torch.load(os.path.join('./model/', params['model']['name'], params['model']['name']+'.best.pth'))
+        test_loss, test_accuracy, test_results = torch_evaluate(best_model, device, test_loader, criterion)
+        torch_plot_confusion_matrix(test_results, test_ds.classes)
 
 
 def _torch_train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10):

@@ -10,9 +10,9 @@ etl:
   train_size: 0.8
   split_rand: 15
 model:
-  tool: 'tensorflow'
-  architect: 'COVIDNet-CXR4-A'
-  name: 'COVIDNet-CXR4-A.iter2.480'
+  tool: 'pytorch'
+  architect: 'resnet18'
+  name: 'resnet18.iter2.480'
   torch:
     in_channel: 1
     continue_learning: True
@@ -28,7 +28,7 @@ model:
     weights_tensorname: 'norm_dense_1_sample_weights:0'
 train:
   display_step: 1
-  epochs: 2
+  epochs: 0
   learning_rate: 0.0002
   lr_decay:
     step_size: 7
@@ -39,6 +39,7 @@ train:
     covid: 5
     normal: 1
     pneumonia: 1
+  replot: True
 evaluate:
   dir_prefix: './output/'
 visual:

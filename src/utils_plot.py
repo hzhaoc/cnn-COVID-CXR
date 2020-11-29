@@ -9,6 +9,7 @@ __author__ = "Hua Zhao"
 
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 
 def _heatmap(data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs):
