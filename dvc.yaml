@@ -1,0 +1,92 @@
+stages:
+  src:
+    cmd: python src/hashdir.py src > src.hash
+    outs:
+    - src.hash:
+      cache: false
+    always_changed: true
+  model:
+    cmd: python src/hashdir.py model > model.hash
+    outs:
+    - model.hash:
+      cache: false
+    always_changed: true
+  data:
+    cmd: python src/hashdir.py data > data.hash
+    outs:
+    - data.hash:
+      cache: false
+    always_changed: true
+  '100':
+    cmd: python src/run_srcipt.py "src/proc/100 Image Meta.ipynb" 200
+    deps: 
+    - src.hash
+    - data.hash
+    - src/proc/100 Image Meta.ipynb
+    params:
+    - etl
+    outs:
+    - .pkls/meta:
+      cache: false
+    - ./reports/100 Image Meta.html:
+      cache: false
+  '110':
+    cmd: python src/run_srcipt.py "src/proc/110 Image Data.ipynb" 2000
+    deps:
+    - src.hash
+    - data.hash
+    - src/proc/110 Image Data.ipynb
+    params:
+    - etl
+    - visual.transform
+    outs:
+    - data/train:
+      cache: false
+    - data/test:
+      cache: false
+    - ./reports/110 Image Data.html:
+      cache: false
+  '160':
+    cmd: python src/run_srcipt.py "src/proc/160 Plot Transform.ipynb" 200
+    deps:
+    - src.hash
+    - data.hash
+    - src/proc/160 Plot Transform.ipynb
+    params:
+    - etl
+    outs:
+    - diag:
+      cache: false
+    - ./reports/160 Plot Transform.html:
+      cache: false
+  '200':
+    cmd: python src/run_srcipt.py "src/proc/200 train.py" 180000
+    deps:
+    - src.hash
+    - data.hash
+    - src/proc/200 train.py
+    - model.hash
+    params:
+    - model
+    - train
+    - evaluate
+    outs:
+    - output:
+      cache: false
+    - model:
+      cache: false
+  '210':
+    cmd: python src/run_srcipt.py "src/proc/210 Plot Feature.ipynb" 200
+    deps:
+    - src.hash
+    - model.hash
+    - ./src/210 Plot Feature.ipynb
+    params:
+    - etl
+    - model
+    - visual.feature
+    outs:
+    - ./reports/210 Plot Feature.html:
+      cache: false
+    - diag:
+      cache: false

@@ -2,7 +2,7 @@
 # https://stackoverflow.com/questions/2429511/why-do-people-write-usr-bin-env-python-on-the-first-line-of-a-python-script
 
 """
-batch_generator.py: source code to generate tensorflow tensor batches from images for model
+batch_generator.py: generate tensorflow tensor batches from images for model
                     original: https://github.com/lindawangg/COVID-Net
 """
 
@@ -18,7 +18,7 @@ see:
 (https://stackoverflow.com/questions/47068709/your-cpu-supports-instructions-that-this-tensorflow-binary-was-not-compiled-to-u)
 to solve this, download tailored wheel from:
 (https://github.com/fo40225/tensorflow-windows-wheel/tree/master/2.1.0/py37/CPU%2BGPU/cuda102cudnn76avx2)
-then isntall the package by
+then isntall the package with
 'pip install --ignore-installed --upgrade /path/target.whl'
 """
 from tensorflow import keras

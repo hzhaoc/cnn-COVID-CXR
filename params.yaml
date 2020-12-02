@@ -46,8 +46,8 @@ visual:
   feature:
     example_num: 5
     img_size_inch: 6
-    save_path: './diag/'
+    save_path: './reports/'
   transform:
     example_num: 5
     img_size_inch: 5
-    save_path: './diag/'
+    save_path: './reports/'

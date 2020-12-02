@@ -48,7 +48,6 @@ def preprocess(META):
         img = _processor(img)
         cv2.imwrite(sample.imgid, img)
         print("progress: {0:.2f}%".format((_ + 1) * 100 / n), end="\r")
-    print('done')
     return
 
 
