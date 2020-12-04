@@ -9,7 +9,8 @@ see ./src/etl.py for data sources
 __author__ = "Hua Zhao"
 
 from src.etl import *
-from src.utils_spark import CXR
+from src import params
+from src.utils_spark import CXR, quiet_logs
 import pyspark
 
 
@@ -28,6 +29,9 @@ except:
 
 
 def spark_etl():
+    # setting log level seems not working, why?
+    sc.setLogLevel('OFF')
+    quiet_logs(sc)
     rdd0 = spark_etl_META_0()
     rdd1 = spark_etl_META_1()
     rdd2 = spark_etl_META_2()

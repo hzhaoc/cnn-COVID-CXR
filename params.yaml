@@ -1,14 +1,15 @@
 etl:
-  data_path: './data/'
   crop_top: 0.05
   image_size: 480
   use_spark: True
+  spark_logLevel: 'OFF'
   use_segmentation: True
   use_CLAHE: True
   CLAHE_clip_limit: 2.0
   CLAHE_tile_size: 8
   train_size: 0.8
   split_rand: 15
+
 model:
   tool: 'pytorch'
   architect: 'resnet18'
@@ -26,9 +27,10 @@ model:
     logit_tensorname: 'norm_dense_1/MatMul:0'
     label_tensorname: 'norm_dense_1_target:0'
     weights_tensorname: 'norm_dense_1_sample_weights:0'
+
 train:
   display_step: 1
-  epochs: 2
+  epochs: 0
   learning_rate: 0.0002
   lr_decay:
     step_size: 7
@@ -39,15 +41,12 @@ train:
     covid: 5
     normal: 1
     pneumonia: 1
-  replot: True
-evaluate:
-  dir_prefix: './output/'
+  force_plot: False
+
 visual:
   feature:
     example_num: 5
     img_size_inch: 6
-    save_path: './reports/'
   transform:
     example_num: 5
     img_size_inch: 5
-    save_path: './reports/'

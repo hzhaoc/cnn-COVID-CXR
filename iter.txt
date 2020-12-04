@@ -1,0 +1,4 @@
+changes from iter1 to iter2:
+- add histogram equilization
+- add segmentation
+- image shape from 224x224x3 to 480x480x1

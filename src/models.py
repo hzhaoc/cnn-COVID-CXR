@@ -7,7 +7,7 @@ models.py: custom pytorch models
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
+from src import *
 import torchvision as tv
 import torch.nn as nn
 

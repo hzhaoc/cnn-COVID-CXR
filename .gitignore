@@ -1,11 +1,20 @@
+# git
+# https://git-scm.com/docs/gitignore
+# .gitignore prevent untracked files from being tracked, doesn't prevent tracked files already in index
+# to remove file from index: 			git rm --cached <file>
+# to remove all files within a folder: 	git rm -r --cached <folder>
+
+# dvc
+# only dvc pipeline stages (dvc.yaml, DAG.dot, DAG.png, ), paramater dependencies (params.yaml), dvcignore, configs, are tracked by git. cache, tmp, (.dvc) are not tracked
+
 *.pyc
 todo.txt
 .DS_Store
 *.log
-/.img
-/.ipynb_checkpoints
-/.ref
-/__pycache__
+/.img/
+.ipynb_checkpoints
+/.ref/
+__pycache__
 /data
 *.cls
 *.aux
@@ -15,3 +24,12 @@ todo.txt
 *.docx
 /src/.ipynb_checkpoints
 /src/__pycache__
+# /.dvc/
+# .dvcignore
+/*.html
+/.pkls/
+*.hash
+/*.ipynb
+dvc.lock
+/*.log.txt
+/*log.txt

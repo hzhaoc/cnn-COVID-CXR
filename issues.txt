@@ -1,0 +1,10 @@
+1. ERROR Shell: Failed to locate the winutils binary in the hadoop binary path
+solve: 
+https://github.com/dotnet/spark/issues/61
+https://stackoverflow.com/questions/51922477/running-spark-pyspark-first-time
+
+2. tensorflow 1.10.0 default builds DO NOT include CPU instructions that fasten matrix computation including avx, avx2, etc,.
+solve:
+see explains at https://stackoverflow.com/questions/47068709/your-cpu-supports-instructions-that-this-tensorflow-binary-was-not-compiled-to-u
+see wheel downloads at https://github.com/fo40225/tensorflow-windows-wheel/tree/master/2.1.0/py37/CPU%2BGPU/cuda102cudnn76avx2
+install by 'pip install --ignore-installed --upgrade /path/target.whl'

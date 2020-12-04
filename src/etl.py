@@ -3,26 +3,22 @@
 
 """
 etl.py: do ETL on source images
-Source 0: https://github.com/ieee8023/covid-chestxray-dataset
-Source 1: https://github.com/agchung/Figure1-COVID-chestxray-dataset
-Source 2: https://github.com/agchung/Actualmed-COVID-chestxray-dataset
-Source 3: https://www.kaggle.com/tawsifurrahman/covid19-radiography-database
-Source 4: https://www.kaggle.com/c/rsna-pneumonia-detection-challenge
 """
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
+from src import *
 from src.utils import *
 from src.transform import *
 
 
 def preprocess(META):
     """
-    preprocess and save source images into pipeline
+    preprocess and save source images ready for neural network
     """
     for p in [TRAIN_PATH, TEST_PATH]:
-        shutil.rmtree(p)
+        if os.path.isdir(p):
+            shutil.rmtree(p)
         os.makedirs(p)
         for label in labelmap.keys():
             if not os.path.isdir(os.path.join(p, label)):

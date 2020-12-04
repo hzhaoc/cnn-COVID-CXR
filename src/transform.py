@@ -9,6 +9,8 @@ __author__ = "Hua Zhao"
 
 import cv2
 import torchvision.transforms as transforms
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # https://github.com/tensorflow/tensorflow/issues/37649
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pydicom as dicom
 import numpy as np

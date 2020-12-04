@@ -7,12 +7,12 @@ plot_feature.py: visualize model features from random samples to display ROI (re
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
+from src import *
 from matplotlib import pyplot as plt
 from src.transform import *
 
 
-def plot_example_transforms(example_num=5, save_path='./diag/', size=5, use_seg=False):
+def plot_example_transforms(example_num=5, save_path='./diagnosis/', size=5, use_seg=False):
     """
     visualize random original and transformed training or testing images
     """
@@ -24,10 +24,11 @@ def plot_example_transforms(example_num=5, save_path='./diag/', size=5, use_seg=
                             tileGridSize=(params['etl']['CLAHE_tile_size'], params['etl']['CLAHE_tile_size'])
     )
 
-    shutil.rmtree(save_path)
-    os.makedirs(save_path)
+    if os.path.isdir(os.path.join(save_path, 'transform')):
+        shutil.rmtree(os.path.join(save_path, 'transform'))
+    os.makedirs(os.path.join(save_path, 'transform'))
 
-    meta = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
+    meta = pickle.load(open(os.path.join(CACHE_PATH, 'meta', 'meta'), 'rb'))
     fns = np.random.choice(meta.img, example_num)
     
     fig, axs = plt.subplots(len(fns), 2, constrained_layout=True)
@@ -53,5 +54,5 @@ def plot_example_transforms(example_num=5, save_path='./diag/', size=5, use_seg=
     title = f'images: original vs transformed'
     fig.suptitle(title, fontsize=16)
     plt.show()
-    fig.savefig(os.path.join(save_path, f'transformation plot.png'))
+    fig.savefig(os.path.join(save_path, 'transform', f'transform example.png'))
     return

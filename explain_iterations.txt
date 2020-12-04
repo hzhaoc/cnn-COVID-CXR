@@ -1,4 +1,0 @@
-cahnges from iter1 to iter2:
-- add histogram equilization
-- add segmentation
-- 480x480x1 image instead of 224x224x3

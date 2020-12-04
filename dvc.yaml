@@ -1,92 +1,111 @@
 stages:
-  src:
-    cmd: python src/hashdir.py src > src.hash
+  source code:
+    cmd: python src/hashdir.py src > .hash/src.hash
     outs:
-    - src.hash:
-      cache: false
-    always_changed: true
-  model:
-    cmd: python src/hashdir.py model > model.hash
-    outs:
-    - model.hash:
-      cache: false
+    - .hash/src.hash:
+        cache: false
     always_changed: true
   data:
-    cmd: python src/hashdir.py data > data.hash
+    cmd: python src/hashdir.py ./data/source > .hash/data.hash
     outs:
-    - data.hash:
-      cache: false
+    - .hash/data.hash:
+        cache: false
     always_changed: true
-  '100':
-    cmd: python src/run_srcipt.py "src/proc/100 Image Meta.ipynb" 200
-    deps: 
-    - src.hash
-    - data.hash
-    - src/proc/100 Image Meta.ipynb
-    params:
-    - etl
-    outs:
-    - .pkls/meta:
-      cache: false
-    - ./reports/100 Image Meta.html:
-      cache: false
-  '110':
-    cmd: python src/run_srcipt.py "src/proc/110 Image Data.ipynb" 2000
+  meta:
+    cmd: python src/run_script.py "src/main/100 Image Meta.ipynb" 200 && python src/hashdir.py
+      .pkls/meta > .hash/meta.hash
     deps:
-    - src.hash
-    - data.hash
-    - src/proc/110 Image Data.ipynb
+    - .hash/data.hash
+    - .hash/src.hash
+    - src/main/100 Image Meta.ipynb
     params:
-    - etl
+    - etl.CLAHE_clip_limit
+    - etl.CLAHE_tile_size
+    - etl.crop_top
+    - etl.image_size
+    - etl.split_rand
+    - etl.train_size
+    - etl.use_CLAHE
+    - etl.use_segmentation
+    - etl.use_spark
+    outs:
+    - .hash/meta.hash:
+        cache: false
+    - 100 Image Meta.html:
+        cache: false
+  feature and label:
+    cmd: python src/run_script.py "src/main/110 Image Data.ipynb" 2000 && python src/hashdir.py
+      ./data/feature > .hash/feature.hash
+    deps:
+    - .hash/meta.hash
+    - src/main/110 Image Data.ipynb
+    params:
+    - etl.CLAHE_clip_limit
+    - etl.CLAHE_tile_size
+    - etl.crop_top
+    - etl.image_size
+    - etl.use_CLAHE
+    - etl.use_segmentation
+    outs:
+    - .hash/feature.hash:
+        cache: false
+    - 110 Image Data.html:
+        cache: false
+    - data/feature:
+        cache: false
+  visualize image transform:
+    cmd: python src/run_script.py "src/main/160 Plot Transform.ipynb" 200
+    deps:
+    - .hash/feature.hash
+    - src/main/160 Plot Transform.ipynb
+    params:
+    - etl.CLAHE_clip_limit
+    - etl.CLAHE_tile_size
+    - etl.crop_top
+    - etl.image_size
+    - etl.use_CLAHE
+    - etl.use_segmentation
     - visual.transform
     outs:
-    - data/train:
-      cache: false
-    - data/test:
-      cache: false
-    - ./reports/110 Image Data.html:
-      cache: false
-  '160':
-    cmd: python src/run_srcipt.py "src/proc/160 Plot Transform.ipynb" 200
-    deps:
-    - src.hash
-    - data.hash
-    - src/proc/160 Plot Transform.ipynb
-    params:
-    - etl
+    - ./diagnosis/transform/:
+        cache: false
+    - 160 Plot Transform.html:
+        cache: false
+  model:
+    cmd: python src/hashdir.py model > .hash/model.hash
     outs:
-    - diag:
-      cache: false
-    - ./reports/160 Plot Transform.html:
-      cache: false
-  '200':
-    cmd: python src/run_srcipt.py "src/proc/200 train.py" 180000
+    - .hash/model.hash:
+        cache: false
+    always_changed: true
+  train and evaluate:
+    cmd: python -m "src.main.200 Train" >> train.log.txt && python src/hashdir.py
+      model > .hash/train.hash
     deps:
-    - src.hash
-    - data.hash
-    - src/proc/200 train.py
-    - model.hash
+    - .hash/feature.hash
+    - .hash/model.hash
+    - src/main/200 Train.py
     params:
+    - etl.image_size
     - model
     - train
-    - evaluate
     outs:
-    - output:
-      cache: false
-    - model:
-      cache: false
-  '210':
-    cmd: python src/run_srcipt.py "src/proc/210 Plot Feature.ipynb" 200
+    - .hash/train.hash:
+        cache: false
+  visualize model feature:
+    cmd: python src/run_script.py "src/main/210 Plot Feature.ipynb" 200
     deps:
-    - src.hash
-    - model.hash
-    - ./src/210 Plot Feature.ipynb
+    - .hash/train.hash
+    - src/main/210 Plot Feature.ipynb
     params:
-    - etl
-    - model
-    - visual.feature
+    - etl.image_size
+    - model.architect
+    - model.name
+    - model.tool
+    - model.torch.in_channel
+    - visual.feature.example_num
+    - visual.feature.img_size_inch
     outs:
-    - ./reports/210 Plot Feature.html:
-      cache: false
-    - diag:
-      cache: false
+    - 210 Plot Feature.html:
+        cache: false
+    - diagnosis/feature:
+        cache: false

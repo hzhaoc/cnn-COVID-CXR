@@ -9,8 +9,7 @@ batch_generator.py: generate tensorflow tensor batches from images for model
 __author__ = "Hua Zhao"
 
 from src.etl import *
-# import tensorflow.compat.v1 as tf  # version 2.x
-import tensorflow as tf  # version 1.x
+import tensorflow.compat.v1 as tf  # version 2.3.1
 """
 NOTICE: 
 tensorflow default builds DO NOT include CPU instructions that fasten matrix computation including avx, avx2, etc,.
@@ -46,7 +45,7 @@ class TFBalancedCovidBatch(keras.utils.Sequence):
         self.class_weights = class_weights
         # inside class
         self.n = 0  # batch index
-        META = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
+        META = pickle.load(open(os.path.join(CACHE_PATH, 'meta', 'meta'), 'rb'))
         if self.is_training:
             META = META[META.train==1]
         else:

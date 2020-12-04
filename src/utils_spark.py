@@ -67,3 +67,9 @@ def _spark_src3_img(s, label):
         fn = os.path.join(INPUT_PATH_3_2_IMG, s.replace('-', '(').replace('.', ').'))
         _ = os.path.exists(fn)
     return fn if _ else ' ('.join(fn.split('('))
+
+
+def quiet_logs(sc):
+    logger = sc._jvm.org.apache.log4j
+    logger.LogManager.getLogger("org"). setLevel( logger.Level.ERROR )
+    logger.LogManager.getLogger("akka").setLevel( logger.Level.ERROR )

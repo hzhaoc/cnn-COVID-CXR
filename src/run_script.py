@@ -5,6 +5,8 @@ if __name__ == "__main__":
     import subprocess
     import sys
     import os
+    import time
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # https://github.com/tensorflow/tensorflow/issues/37649
 
 
     _, notebook, timeout = sys.argv
@@ -26,17 +28,17 @@ if __name__ == "__main__":
             '--execute', notebook.name,
         ])
 
-        # Convert what just ran to html in .reports.
+        # Convert what just ran to html
         subprocess.run([
             'jupyter',
             'nbconvert',
             '--to', 'html',
-            '--output-dir=.reports',
             notebook.name,
         ])
 
         # delete notebooks after run completion
+        time.sleep(2)
         os.remove(notebook.name)
 
-    elif notebook.name.split('.')[-1] == 'py':
-        subprocess.run(["python", "./src/proc/200 train.py"])  # wait, do nothing until it finish
+    elif notebook.name.split('.')[-1] == 'py':  # not work on .py file due to ModuleNotFoundError
+        subprocess.run(["python", f"{notebook}"])  # wait, do nothing until it finish

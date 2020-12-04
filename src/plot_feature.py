@@ -7,7 +7,7 @@ plot_feature.py: visualize model features from random samples to display ROI (re
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
+from src import *
 import torch
 from gradcam.gradcam import *  # https://github.com/jacobgil/pytorch-grad-cam
 from matplotlib import pyplot as plt
@@ -35,6 +35,10 @@ def plot_features_from_random_example(example_num=1,
             - N/A
     ---------------------------
     """
+    if os.path.isdir(os.path.join(save_path, 'feature')):
+        shutil.rmtree(os.path.join(save_path, 'feature'))
+    os.makedirs(os.path.join(save_path, 'feature'))
+
     if model_tool == 'pytorch':
         plot_example_torch_features(example_num=example_num, 
                                     model_name=model_name, 
@@ -80,7 +84,7 @@ def plot_example_torch_features(example_num=1, model_name='test', architect=None
     else:
         raise ValueError(f"Invalid model architect {architect}")
     
-    meta = pickle.load(open(os.path.join(SAVE_PATH,  'meta'), 'rb'))
+    meta = pickle.load(open(os.path.join(CACHE_PATH, 'meta', 'meta'), 'rb'))
     
     for example in range(example_num):
         fig, axs = plt.subplots(len(labelmap), 2, constrained_layout=True)
@@ -117,7 +121,7 @@ def plot_example_torch_features(example_num=1, model_name='test', architect=None
         title = f'feature example {example+1}'
         fig.suptitle(title, fontsize=16)
         plt.show()
-        fig.savefig(os.path.join(save_path, f'{model_name}.feature.{example+1}.png'))
+        fig.savefig(os.path.join(save_path, 'feature', f'{model_name}.feature.{example+1}.png'))
     return
 
 

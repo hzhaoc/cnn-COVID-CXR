@@ -10,7 +10,7 @@ evaluate.py: script to evaluate tensorflow model
 
 __author__ = "Hua Zhao"
 
-from src.glob import *
+from src import *
 from src.utils import *
 from src.utils_plot import _heatmap, _annotate_heatmap
 import matplotlib.pyplot as plt
@@ -85,15 +85,6 @@ def tf_evaluate(sess, graph, meta, input_tensor, output_tensor, epoch):
     matrix = matrix.astype('float')
     tprs = [matrix[i,i]/np.sum(matrix[i,:]) if np.sum(matrix[i,:]) else 0 for i in range(len(matrix))]
     ppvs = [matrix[i,i]/np.sum(matrix[:,i]) if np.sum(matrix[:,i]) else 0 for i in range(len(matrix))]
-    """
-    print('\n', matrix)
-    print('Sens/TPR Normal: {0:.3f}, Pneumonia: {1:.3f}, COVID-19: {2:.3f}'.format(tprs[params['train']['labelmap']['normal']],
-                                                                                 tprs[params['train']['labelmap']['pneumonia']],
-                                                                                 tprs[params['train']['labelmap']['covid']]))
-    print('PPV Normal: {0:.3f}, Pneumonia {1:.3f}, COVID-19: {2:.3f}'.format(ppvs[params['train']['labelmap']['normal']],
-                                                                             ppvs[params['train']['labelmap']['pneumonia']],
-                                                                             ppvs[params['train']['labelmap']['covid']]))
-    """
     # plot and save normalized confusion matrix
     tf_plot_confusion_matrix(matrix, [labelmap_inv[x] for x in sorted(labelmap_inv)], epoch)
 
@@ -111,9 +102,9 @@ def tf_plot_learning_curves(TPRs, PPVs):
     ax.set_xlabel('epoch')
     ax.set_ylabel('rate')
     ax.grid()
-    if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
-        os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'TPR.png'))
+    if not os.path.isdir(os.path.join(OUTPUT_PATH, params['model']['name'])):
+        os.makedirs(os.path.join(OUTPUT_PATH, params['model']['name']))
+    fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], 'TPR.png'))
     # PPV
     fig = plt.figure(figsize=(15, 5))
     ax = plt.subplot(1, 1, 1)
@@ -124,7 +115,7 @@ def tf_plot_learning_curves(TPRs, PPVs):
     ax.set_xlabel('epoch')
     ax.set_ylabel('rate')
     ax.grid()
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'PPV.png'))
+    fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], 'PPV.png'))
     return
 
 
@@ -139,15 +130,15 @@ def tf_plot_confusion_matrix(matrix, class_names, epoch):
     ax.set_title('Normalized Confusion Matrix')
     ax.set_xlabel('Pred')
     ax.set_ylabel('True')
-    if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
-        os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'confusion_matrix_e{epoch}.png'))
+    if not os.path.isdir(os.path.join(OUTPUT_PATH, params['model']['name'])):
+        os.makedirs(os.path.join(OUTPUT_PATH, params['model']['name']))
+    fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], f'confusion_matrix_e{epoch}.png'))
     return
 
 
 def torch_plot_learning_curves(train_losses, valid_losses):
-    if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
-        os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
+    if not os.path.isdir(os.path.join(OUTPUT_PATH, params['model']['name'])):
+        os.makedirs(os.path.join(OUTPUT_PATH, params['model']['name']))
     
     fig = plt.figure(figsize=(15, 5))
     ax = plt.subplot(1, 1, 1)
@@ -158,7 +149,7 @@ def torch_plot_learning_curves(train_losses, valid_losses):
     ax.set_xlabel('epoch')
     ax.set_ylabel('loss')
     ax.grid()
-    fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], 'losses.png'))
+    fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], 'losses.png'))
     pass
 
 
@@ -168,8 +159,8 @@ def torch_plot_confusion_matrix(results, class_names):
     https://en.wikipedia.org/wiki/Confusion_matrix
     """
     
-    if not os.path.isdir(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'])):
-        os.makedirs(os.path.join(params['evaluate']['dir_prefix'], params['model']['name']))
+    if not os.path.isdir(os.path.join(OUTPUT_PATH, params['model']['name'])):
+        os.makedirs(os.path.join(OUTPUT_PATH, params['model']['name']))
         
     # transform to confusion matrix
     n_classes = len(class_names)
@@ -195,7 +186,7 @@ def torch_plot_confusion_matrix(results, class_names):
         ax.set_title('Horizontally Normalized Confusion Matrix (TPR, TNR) of model lowest valid loss')
         ax.set_xlabel('Pred')
         ax.set_ylabel('True')
-        fig.savefig(os.path.join(params['evaluate']['dir_prefix'], params['model']['name'], f'{fn}.png'))
+        fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], f'{fn}.png'))
         return
     _plot(cmat, 'confusion_matrix')
     _plot(cmat_hnorm, 'confusion_matrix_hnorm')
