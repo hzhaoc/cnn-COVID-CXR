@@ -78,7 +78,7 @@ stages:
         cache: false
     always_changed: true
   train and evaluate:
-    cmd: python -u -m "src.main.200 Train" >> train.log.txt && python src/hashdir.py
+    cmd: python -u -W ignore -m "src.main.200 Train" >> train.log.txt && python src/hashdir.py
       model > .hash/train.hash
     deps:
     - .hash/feature.hash

@@ -77,7 +77,7 @@ dvc run -n "train and evaluate" ^
 		-O .hash/train.hash ^
 		-f ^
 		--no-exec ^
-		"python -u -m \"src.main.200 Train\" >> train.log.txt && python src/hashdir.py model > .hash/train.hash"
+		"python -u -W ignore -m \"src.main.200 Train\" >> train.log.txt && python src/hashdir.py model > .hash/train.hash"
 dvc run -n "visualize model feature" ^
 		-d .hash/train.hash ^
 		-d "src/main/210 Plot Feature.ipynb" ^
