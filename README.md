@@ -2,11 +2,11 @@
 This project built a pipeline with multiple trained models to classify Chest X-Ray images into Normal/Penumonia/COVID-19. 
 
 ## Features
-- **DVC pipeline** (with simple CLI for setup and run) to reproduce and version control the whole process
+- **DVC pipeline** (with simple CLI for setup and run) to version and reproduce the whole process
 - **Segmentation** and **Adaptive Histogram Equilization** with OpenCV in preprocess
 - Over **20,000** CXRs and labels
 - **Visualization** of image transformation for clarification
-- Trained models including **ResNet**, **VGGNet**, **COVID-Net** with tensorflow and pytorch.
+- Trained models including **ResNet**, **VGGNet** in tensorflow**COVID-Net** in pytorch.
 - **Augmentation** in training
 - **Grad-CAM Visualization** of model feature for clarification
 - **Hyperparameter** tunning for ETL, training, evaluating, models, visualization.
@@ -54,13 +54,13 @@ run
 ```
 
 ## Pipeline
-The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting. Eeach stage executes an OS-dependant cmd (only support Windows now) which executue a series of numbered main files (.ipynb, .py) located in `./src/main/`, and/or compute a hash file for the pipeline graph. Examples of those main files are displayed in `./main demo/`
+The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting. Each stage executes an OS-dependant cmd (only support Windows now). The pipeline executes a series of numbered main files (.ipynb, .py) located in `./src/main/`, and also computes a hash file for the pipeline graph. Examples of those main files are displayed in `./main demo/`
 
 ### DAG
 ![DAG](DAG.png)
 
 ### Hyperparameters
-`params.yaml` is the hyperparameter file to construct pipeline in DVC, and for user to fine-tune the whole process from ETL, model setup to training and visualization.
+`params.yaml` is the hyperparameter file as part of the graph in DVC pipeline, and used for user to fine-tune the whole procedure from ETL, model setup to model training and visualization.
 It fine-tunes:
 - ETL: image size, crop area, spark control, segmentation control, adaptive or global histogram equilizaiton, etc.
 - Model: model tool (tensorflow/pytorch), model name, model architect (VGG, ResNet, COVID-Net), transfer-learning control, etc.
