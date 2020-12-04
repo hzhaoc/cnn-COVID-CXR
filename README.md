@@ -6,7 +6,7 @@ This project built a pipeline with multiple trained models to classify Chest X-R
 - **Segmentation** and **Adaptive Histogram Equilization** with OpenCV in preprocess
 - Over **20,000** CXRs and labels
 - **Visualization** of image transformation for clarification
-- Trained models including **ResNet**, **VGGNet**, [COVID-Net](https://github.com/lindawangg/COVID-Net) with tensorflow and pytorch.
+- Trained models including **ResNet**, **VGGNet**, **COVID-Net** with tensorflow and pytorch.
 - **Augmentation** in training
 - **Grad-CAM Visualization** of model feature for clarification
 - **Hyperparameter** tunning for ETL, training, evaluating, models, visualization.
@@ -54,7 +54,7 @@ run
 ```
 
 ## Pipeline
-The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting.
+The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting. Eeach stage executes an OS-dependant cmd (only support Windows now) which executue a series of numbered main files (.ipynb, .py) located in `./src/main/`, and/or compute a hash file for the pipeline graph. Examples of those main files are displayed in `./main demo/`
 
 ### DAG
 ![DAG](DAG.png)
@@ -68,6 +68,7 @@ It fine-tunes:
 - Visualization: example number, figure size for both transformation and model feature.
 
 ### Data
+
 #### Data Source
 The current COVIDx dataset is constructed by the following open source chest radiography datasets:
 * https://github.com/ieee8023/covid-chestxray-dataset
@@ -90,15 +91,30 @@ See `./src/transform.py` for image pre-training transform.
 ![Transform Example](https://github.com/hzhaoc/COVID-CXR/blob/main/diagnosis/transform/transform%20example.png)
 
 ### Model
-Supported models include `VGG11`, `VGG19`, `ResNet18`, `ResNet50`, `COVID-Net-CXR-A`, `COVID-Net-CXR-Large`, `COVID-Net-CXR-Small`.
+Supported models include `VGG11`, `VGG19`, `ResNet18`, `ResNet50`, `COVID-Net-CXR-A`, `COVID-Net-CXR-Large`, `COVID-Net-CXR-Small`. ResNet and VGGNet are in `PyTorch` and has complete computational model structure with weights. COVID-Net is from https://github.com/lindawangg/COVID-Net, it doesn't have full computational model but meta graph with saved weights checkpoints.
 
 #### Trained model and weights
-For COVID-Net tensorflow models, access metagraph and checkpoints source from https://github.com/lindawangg/COVID-Net. 
+For COVID-Net tensorflow models, access metagraph and checkpoints source from https://github.com/lindawangg/COVID-Net.
 For VGGNet, ResNet pytorch models, access saved model from `./model/`
 
 ### Train and Evaluate
-
+- Augmentation is applied in training. 
+- Due to sample inbalance, batch weights and optimization weights for COVID-19 are balanced according to setup weights from `params.yaml`. 
+- For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with 'torchvision', or from pretrained saved model in `./moodel/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
 
 ## Issues
+1. ```ERROR Shell: Failed to locate the winutils binary in the hadoop binary path```
+solve: 
+https://github.com/dotnet/spark/issues/61
+https://stackoverflow.com/questions/51922477/running-spark-pyspark-first-time
+2. tensorflow 1.x default builds DO NOT include CPU instructions that fasten matrix computation including avx, avx2, etc,.
+solve:
+see explains at https://stackoverflow.com/questions/47068709/your-cpu-supports-instructions-that-this-tensorflow-binary-was-not-compiled-to-u
+see wheel downloads at https://github.com/fo40225/tensorflow-windows-wheel/tree/master/2.1.0/py37/CPU%2BGPU/cuda102cudnn76avx2
+install by 'pip install --ignore-installed --upgrade /path/target.whl'
+3. COVID-Net is only a meta graph with saved checkpoints. Unable to visualize its features.
 
 ## Todo
+- collect more additional data for test
+- CLI with more functionality
+- 
