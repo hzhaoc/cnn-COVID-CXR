@@ -30,7 +30,7 @@ dvc run -n meta ^
 		-O "100 Image Meta.html" ^
 		-f ^
 		--no-exec ^
-		"python src/run_script.py \"src/main/100 Image Meta.ipynb\" 200 && python src/hashdir.py .pkls/meta > .hash/meta.hash"
+		"python src/run_script.py \"src/main/100 Image Meta.ipynb\" 300 && python src/hashdir.py .pkls/meta > .hash/meta.hash"
 dvc run -n "feature and label" ^
 		-d .hash/meta.hash ^
 		-d "src/main/110 Image Data.ipynb" ^
@@ -45,7 +45,7 @@ dvc run -n "feature and label" ^
 		-O "110 Image Data.html" ^
 		-f ^
 		--no-exec ^
-		"python src/run_script.py \"src/main/110 Image Data.ipynb\" 2000 && python src/hashdir.py ./data/feature > .hash/feature.hash"
+		"python src/run_script.py \"src/main/110 Image Data.ipynb\" 2200 && python src/hashdir.py ./data/feature > .hash/feature.hash"
 dvc run -n "visualize image transform" ^
 		-d .hash/feature.hash ^
 		-d "src/main/160 Plot Transform.ipynb" ^
@@ -60,7 +60,7 @@ dvc run -n "visualize image transform" ^
 		-O "160 Plot Transform.html" ^
 		-f ^
 		--no-exec ^
-		"python src/run_script.py \"src/main/160 Plot Transform.ipynb\" 200"
+		"python src/run_script.py \"src/main/160 Plot Transform.ipynb\" 300"
 dvc run -n model ^
 		-O .hash/model.hash ^
 		--always-changed ^
@@ -77,7 +77,7 @@ dvc run -n "train and evaluate" ^
 		-O .hash/train.hash ^
 		-f ^
 		--no-exec ^
-		"python -m \"src.main.200 Train\" >> train.log.txt && python src/hashdir.py model > .hash/train.hash"
+		"python -u -m \"src.main.200 Train\" >> train.log.txt && python src/hashdir.py model > .hash/train.hash"
 dvc run -n "visualize model feature" ^
 		-d .hash/train.hash ^
 		-d "src/main/210 Plot Feature.ipynb" ^
@@ -92,7 +92,7 @@ dvc run -n "visualize model feature" ^
 		-O diagnosis/feature ^
 		-f ^
 		--no-exec ^
-		"python src/run_script.py \"src/main/210 Plot Feature.ipynb\" 200"
+		"python src/run_script.py \"src/main/210 Plot Feature.ipynb\" 300"
 dvc dag
 dvc dag --dot > DAG.dot
 dot -Tpng DAG.dot -o DAG.png

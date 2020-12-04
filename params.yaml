@@ -46,7 +46,7 @@ train:
 visual:
   feature:
     example_num: 5
-    img_size_inch: 6
+    img_size_inch: 5
   transform:
     example_num: 5
     img_size_inch: 5
