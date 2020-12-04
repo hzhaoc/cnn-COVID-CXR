@@ -42,7 +42,9 @@ Main software packages include:
 ```
 conda env create -f env.yml
 ```
-2. For Windows OS, build pipeline with
+2. Download data. See [data source](https://github.com/hzhaoc/COVID-CXR#data-source)
+3. [Optional] Download COVID-Net models if you want. See [model source](https://github.com/lindawangg/COVID-Net)
+4. For Windows OS, build pipeline with
 ```
 setup
 ```
