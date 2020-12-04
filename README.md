@@ -87,7 +87,7 @@ See `./src/transform.py` for image pre-training transform.
 {'pneumonia': 11092, 'normal': 10340, 'covid': 617}
 ```
 
-#### Pretraining Transform
+#### Demo of Pretraining Transform
 ![Transform Example](https://github.com/hzhaoc/COVID-CXR/blob/main/diagnosis/transform/transform%20example.png)
 
 ### Model
@@ -97,10 +97,32 @@ Supported models include `VGG11`, `VGG19`, `ResNet18`, `ResNet50`, `COVID-Net-CX
 For COVID-Net tensorflow models, access metagraph and checkpoints source from https://github.com/lindawangg/COVID-Net.
 For VGGNet, ResNet pytorch models, access saved model from `./model/`
 
+#### Demo of Grad-CAM visualization of model features
+![Grad-CAM Model Feature](https://github.com/hzhaoc/COVID-CXR/blob/main/diagnosis/feature/resnet18.iter2.480.feature.2.png)
+
+### Demo of model output metrics
+- Learning curve - PPVs
+![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/COVIDNet-CXR-Small-test/PPV.png)
+- Learning curve - TPRs
+![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/COVIDNet-CXR-Small-test/TPR.png)
+- Learning curve - losses
+![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/resnet18.iter2.480/losses.png)
+- Confusion Matrix
+![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/resnet18.iter2.480/confusion_matrix.png)
+- Confusion Matrix (horizontally normalized for PPV/Sensitivity/Specivity)
+![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/resnet18.iter2.480/confusion_matrix_hnorm.png)
+
 ### Train and Evaluate
 - Augmentation is applied in training. 
 - Due to sample inbalance, batch weights and optimization weights for COVID-19 are balanced according to setup weights from `params.yaml`. 
 - For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with 'torchvision', or from pretrained saved model in `./moodel/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
+
+#### Iterations
+Two iteration of modeling and training results are currently available for ResNet. 
+Changes from iter1 to iter2:
+- add histogram equilization
+- add segmentation
+- image shape from 224x224x3 to 480x480x1
 
 ## Issues
 1. ```ERROR Shell: Failed to locate the winutils binary in the hadoop binary path```
