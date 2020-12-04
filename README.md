@@ -116,7 +116,7 @@ For VGGNet, ResNet pytorch models, access saved model from `./model/`
 ![image](https://github.com/hzhaoc/COVID-CXR/blob/main/output/resnet18.iter2.480/confusion_matrix_hnorm.png)
 
 ## Train and Evaluate
-- Augmentation is applied in training. 
+- In-training augmentation.
 - Due to sample inbalance, batch weights and optimization weights for COVID-19 are balanced according to setup weights from `params.yaml`. 
 - For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with 'torchvision', or from pretrained saved model in `./moodel/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
 
