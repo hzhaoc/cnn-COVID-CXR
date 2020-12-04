@@ -1,0 +1,7 @@
+# ignore any files/folders in subfolders, DON NOT IGNORE WHOLE SUBFOLDER
+/*/**
+
+# unignore all .pth file
+!*.losses
+!PPVs
+!TPRs
