@@ -140,6 +140,6 @@ install by 'pip install --ignore-installed --upgrade /path/target.whl'
 3. COVID-Net is only a meta graph with saved checkpoints. Unable to visualize its features.
 
 ## Todo
-- collect more additional data for test
+- collect new data for test
 - CLI with more functionality
 - 
