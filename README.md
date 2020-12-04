@@ -54,7 +54,7 @@ run
 ```
 
 ## Pipeline
-The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting. Each stage executes an OS-dependant cmd (only support Windows now). The pipeline executes a series of numbered main files (.ipynb, .py) located in `./src/main/`, and also computes a hash file for the pipeline graph. Examples of those main files are displayed in `./main demo/`
+The pipeline is built on DVC ([Data Version Control](https://dvc.org/doc/start)). It caches and versions data flow, constructs a DAG ([directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) used to reproduce the whole procedure. The DAG consists of series of ordered stages with dependenceis and outputs including hyperparameter setting. Each stage executes an OS-dependant cmd (only support Windows now). The pipeline executes a series of numbered main files (.ipynb, .py) located in `./src/main/`, and also computes hashes located in `./.hash/` for the pipeline graph. Examples of those main files are displayed in `./main demo/`
 
 ### DAG
 ![DAG](DAG.png)
@@ -119,6 +119,7 @@ For VGGNet, ResNet pytorch models, access saved model from `./model/`
 - In-training augmentation.
 - Due to sample inbalance, batch weights and optimization weights for COVID-19 are balanced according to setup weights from `params.yaml`. 
 - For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with 'torchvision', or from pretrained saved model in `./moodel/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
+- Output of main file `./src/main/200 Train.py` as part of stage cmd in pipeline is redirected to untracked `train.log.txt`
 
 ## Iterations
 Two iteration of modeling and training results are currently available for ResNet.\
