@@ -170,7 +170,7 @@ def torch_plot_confusion_matrix(results, class_names):
         for y_pred in range(n_classes):
             cmat.loc[y_true, y_pred] = counter[(y_true, y_pred)]
     cmat_hnorm = (cmat.T / cmat.sum(axis=1)).T  # horizontally normalized for TPR/Sensitivity/Recall, TNR/Specificity
-    cmat_vnorm = cmat / cmat.sum(axis=0)  # horizontally normalized for PPV/Precision, NPV
+    cmat_vnorm = cmat / cmat.sum(axis=0)  # vertically normalized for PPV/Precision, NPV
     def _sort(mat):
         mat.sort_index(inplace=True)
         mat = mat[sorted(mat.columns)]
@@ -178,19 +178,19 @@ def torch_plot_confusion_matrix(results, class_names):
     cmat_hnorm = _sort(cmat_hnorm)
     cmat_vnorm = _sort(cmat_vnorm)
     # plot heatmap
-    def _plot(df, fn):
+    def _plot(df, fn, title):
         fig = plt.figure(figsize=(10, 8))
         ax = plt.subplot(1, 1, 1)
         im, cbar = _heatmap(df.values.astype(float), class_names, class_names, ax=ax, cmap="Blues", cbarlabel=None)  # avoid type mismatch
         texts = _annotate_heatmap(im, valfmt="{x:.2f}")
-        ax.set_title('Horizontally Normalized Confusion Matrix (TPR, TNR) of model lowest valid loss')
+        ax.set_title(title)
         ax.set_xlabel('Pred')
         ax.set_ylabel('True')
         fig.savefig(os.path.join(OUTPUT_PATH, params['model']['name'], f'{fn}.png'))
         return
-    _plot(cmat, 'confusion_matrix')
-    _plot(cmat_hnorm, 'confusion_matrix_hnorm')
-    _plot(cmat_vnorm, 'confusion_matrix_vnorm')
+    _plot(cmat, 'confusion_matrix', 'Confusion Matrix of best model')
+    _plot(cmat_hnorm, 'confusion_matrix_hnorm', 'Horizontally Normalized Confusion Matrix (TPR, TNR) of best model')
+    _plot(cmat_vnorm, 'confusion_matrix_vnorm', 'Vertically Normalized Confusion Matrix (PPV, NPV) of best')
     return
 
 
