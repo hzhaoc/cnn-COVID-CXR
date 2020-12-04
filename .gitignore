@@ -33,5 +33,5 @@ __pycache__
 dvc.lock
 /*.log.txt
 /*log.txt
-/visual/feature/**
-/visual/transform/**
+# /visual/feature/**
+# /visual/transform/**
