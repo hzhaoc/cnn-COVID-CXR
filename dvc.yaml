@@ -66,11 +66,6 @@ stages:
     - etl.use_CLAHE
     - etl.use_segmentation
     - visual.transform
-    outs:
-    - ./diagnosis/transform/:
-        cache: false
-    - 160 Plot Transform.html:
-        cache: false
   model:
     cmd: python src/hashdir.py model > .hash/model.hash
     outs:
@@ -104,8 +99,3 @@ stages:
     - model.torch.in_channel
     - visual.feature.example_num
     - visual.feature.img_size_inch
-    outs:
-    - 210 Plot Feature.html:
-        cache: false
-    - diagnosis/feature:
-        cache: false

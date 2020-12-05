@@ -56,8 +56,6 @@ dvc run -n "visualize image transform" ^
 		-p etl.image_size ^
 		-p etl.CLAHE_clip_limit ^
 		-p etl.CLAHE_tile_size ^
-		-O "./diagnosis/transform/" ^
-		-O "160 Plot Transform.html" ^
 		-f ^
 		--no-exec ^
 		"python src/run_script.py \"src/main/160 Plot Transform.ipynb\" 300"
@@ -88,8 +86,6 @@ dvc run -n "visualize model feature" ^
 		-p model.torch.in_channel ^
 		-p visual.feature.example_num ^
 		-p visual.feature.img_size_inch ^
-		-O "210 Plot Feature.html" ^
-		-O diagnosis/feature ^
 		-f ^
 		--no-exec ^
 		"python src/run_script.py \"src/main/210 Plot Feature.ipynb\" 300"
