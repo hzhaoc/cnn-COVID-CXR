@@ -1,0 +1,4 @@
+*.pdf
+!proposal.pdf
+!final.pdf
+!draft.pdf
