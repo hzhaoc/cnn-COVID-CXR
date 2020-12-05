@@ -95,7 +95,7 @@ Counter({2: 8873, 1: 8272, 0: 493})
 ```
 
 ### Demo of Pretraining Transform
-![Transform Example](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/visual/transform/transform%20example.png)
+![Transform Example](/demo/visual/transform/transform%20example.png)
 
 ## Model
 Supported models include `VGG11`, `VGG19`, `ResNet18`, `ResNet50`, `COVID-Net-CXR-A`, `COVID-Net-CXR-Large`, `COVID-Net-CXR-Small`. ResNet and VGGNet are in `PyTorch` and has complete computational model structure with weights. COVID-Net is from https://github.com/lindawangg/COVID-Net, it doesn't have full computational model but meta graph with saved weights checkpoints.
@@ -105,17 +105,17 @@ For COVID-Net tensorflow models, access metagraph and checkpoints source from ht
 For VGGNet, ResNet pytorch models, access saved model from `./model/`
 
 ### Demo of Grad-CAM visualization of model features
-![Grad-CAM Model Feature](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/visual/feature/resnet18.iter2.480.feature.1.png)
+![Grad-CAM Model Feature](/demo/visual/feature/resnet18.iter2.480.feature.1.png)
 
 ### Demo of model output metrics
 - Learning curve - PPVs
-![image](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/output/PPV.png)
+![image](/demo/output/PPV.png)
 - Learning curve - TPRs
-![image](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/output/TPR.png)
+![image](/demo/output/TPR.png)
 - Learning curve - losses
-![image](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/output/losses.png)
+![image](/demo/output/losses.png)
 - Confusion Matrix (horizontally normalized for PPV/Sensitivity/Specivity)
-![image](https://github.com/hzhaoc/COVID-CXR/blob/main/demo/output/confusion_matrix_hnorm.png)
+![image](/demo/output/confusion_matrix_hnorm.png)
 
 ## Train and Evaluate
 - In-training augmentation.
