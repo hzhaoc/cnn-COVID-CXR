@@ -1,9 +1,9 @@
 etl:
   crop_top: 0.05
-  image_size: 480
+  image_size: 224
   use_spark: True
   spark_logLevel: 'OFF'
-  use_segmentation: True
+  use_segmentation: False
   use_CLAHE: True
   CLAHE_clip_limit: 2.0
   CLAHE_tile_size: 8
@@ -12,10 +12,10 @@ etl:
 
 model:
   tool: 'pytorch'
-  architect: 'resnet18'
-  name: 'resnet18.iter2.480'
+  architect: 'resnet50'
+  name: 'resnet50.iter1.224'
   torch:
-    in_channel: 1
+    in_channel: 3
     continue_learning: True
     transfer_learning: True
   tensorflow:
@@ -41,7 +41,7 @@ train:
     covid: 5
     normal: 1
     pneumonia: 1
-  force_plot: False
+  force_plot: True
 
 visual:
   feature:

@@ -24,9 +24,8 @@ def plot_example_transforms(example_num=5, save_path='./diagnosis/', size=5, use
                             tileGridSize=(params['etl']['CLAHE_tile_size'], params['etl']['CLAHE_tile_size'])
     )
 
-    if os.path.isdir(os.path.join(save_path, 'transform')):
-        shutil.rmtree(os.path.join(save_path, 'transform'))
-    os.makedirs(os.path.join(save_path, 'transform'))
+    if not os.path.isdir(os.path.join(save_path, 'transform')):
+        os.makedirs(os.path.join(save_path, 'transform'))
 
     meta = pickle.load(open(os.path.join(CACHE_PATH, 'meta', 'meta'), 'rb'))
     fns = np.random.choice(meta.img, example_num)

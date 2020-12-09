@@ -35,9 +35,8 @@ def plot_features_from_random_example(example_num=1,
             - N/A
     ---------------------------
     """
-    if os.path.isdir(os.path.join(save_path, 'feature')):
-        shutil.rmtree(os.path.join(save_path, 'feature'))
-    os.makedirs(os.path.join(save_path, 'feature'))
+    if not os.path.isdir(os.path.join(save_path, 'feature')):
+        os.makedirs(os.path.join(save_path, 'feature'))
 
     if model_tool == 'pytorch':
         plot_example_torch_features(example_num=example_num, 
