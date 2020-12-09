@@ -120,7 +120,7 @@ For VGGNet, ResNet pytorch models, access saved model from `./model/`
 ## Train and Evaluate
 - In-training augmentation.
 - Due to sample inbalance, batch weights and optimization weights for COVID-19 are balanced according to setup weights from `params.yaml`. 
-- For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with 'torchvision', or from pretrained saved model in `./moodel/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
+- For VGGNet, ResNet, you can choose to train from refresh, from downloaded pretrained model with `torchvision`, or from pretrained saved model in `./model/`. For COVID-Net, you can choose to train form refresh or from previous checkpoint.
 
 ## Iterations
 Two iteration of modeling and training results are currently available for ResNet.\
